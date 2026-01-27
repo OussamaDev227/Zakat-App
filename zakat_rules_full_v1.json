@@ -1,0 +1,179 @@
+{
+    "metadata": {
+      "version": "1.0",
+      "source": "Doctoral Thesis: Towards a Conceptual Framework for Corporate Zakat Accounting",
+      "scope": "Economic institutions (LLC, sole proprietorship)",
+      "notes": "This ruleset operationalizes validated fiqh-accounting principles and does not issue fatwas"
+    },
+  
+    "zakat_rate": 0.025,
+  
+    "time_condition": {
+      "fiscal_year_required": true,
+      "reason": "Zakat is due after completion of the accounting year (hawl)",
+      "reason_ar": "تجب الزكاة بعد اكتمال الحول المحاسبي للسنة المالية"
+    },
+  
+    "valuation_rules": {
+      "cash": "nominal_value",
+      "inventory": "market_value",
+      "receivables": "expected_collectible_value"
+    },
+  
+    "assets": [
+      {
+        "code": "CASH",
+        "label": "Cash and cash equivalents",
+        "label_ar": "النقدية وما في حكمها",
+        "examples": ["cash_in_hand", "bank_balance", "treasury_cash"],
+        "zakatable": true,
+        "included_in_base": true,
+        "conditions": [],
+        "reason": "Cash represents complete wealth ready for growth",
+        "reason_ar": "النقود مال نامٍ كامل تجب فيه الزكاة لكونه قابلًا للنماء"
+      },
+      {
+        "code": "INVENTORY",
+        "label": "Inventory and trade goods",
+        "label_ar": "المخزونات وعروض التجارة",
+        "examples": ["raw_materials_for_sale", "finished_goods", "goods_for_resale"],
+        "zakatable": true,
+        "included_in_base": true,
+        "conditions": ["intended_for_sale"],
+        "reason": "Inventory is classified as trade goods (ʿUrūḍ al-Tijārah)",
+        "reason_ar": "تُعد المخزونات من عروض التجارة التي تجب فيها الزكاة"
+      },
+      {
+        "code": "RECEIVABLE",
+        "label": "Accounts receivable",
+        "label_ar": "الذمم المدينة",
+        "examples": ["customer_debts", "trade_receivables"],
+        "zakatable": true,
+        "included_in_base": true,
+        "conditions": ["collectible"],
+        "reason": "Collectible receivables are considered expected wealth",
+        "reason_ar": "الديون القابلة للتحصيل تُعد مالًا مرجوًا تجب فيه الزكاة"
+      },
+      {
+        "code": "FIXED_ASSET",
+        "label": "Fixed tangible assets",
+        "label_ar": "الأصول الثابتة العينية",
+        "examples": ["buildings", "machinery", "vehicles", "equipment"],
+        "zakatable": false,
+        "included_in_base": false,
+        "conditions": [],
+        "reason": "Fixed assets are productive tools, not trade goods",
+        "reason_ar": "الأصول الثابتة وسائل إنتاج وليست معدة للبيع فلا زكاة في أعيانها"
+      },
+      {
+        "code": "INTANGIBLE_ASSET",
+        "label": "Intangible assets",
+        "label_ar": "الأصول المعنوية",
+        "examples": ["licenses", "software", "brand_value"],
+        "zakatable": false,
+        "included_in_base": false,
+        "conditions": [],
+        "reason": "Intangible assets are not zakatable in corporate accounting",
+        "reason_ar": "الأصول المعنوية لا تُعد أموالًا زكوية في محاسبة الشركات"
+      },
+      {
+        "code": "LONG_TERM_INVESTMENT",
+        "label": "Long-term investments",
+        "label_ar": "الاستثمارات طويلة الأجل",
+        "examples": ["strategic_holdings", "non_trading_investments"],
+        "zakatable": false,
+        "included_in_base": false,
+        "conditions": ["unless_intended_for_trade"],
+        "reason": "Non-trading investments are excluded from zakat base",
+        "reason_ar": "الاستثمارات غير المعدة للتجارة لا تدخل في الوعاء الزكوي"
+      }
+    ],
+  
+    "liabilities": [
+      {
+        "code": "SHORT_TERM_LIABILITY",
+        "label": "Short-term liabilities",
+        "label_ar": "الخصوم قصيرة الأجل",
+        "examples": ["supplier_payables", "short_term_loans", "accrued_expenses"],
+        "deductible": true,
+        "reason": "Short-term obligations reduce effective zakatable wealth",
+        "reason_ar": "الخصوم قصيرة الأجل تُطرح لأنها التزامات واجبة السداد"
+      },
+      {
+        "code": "LONG_TERM_LIABILITY",
+        "label": "Long-term liabilities",
+        "label_ar": "الخصوم طويلة الأجل",
+        "examples": ["long_term_loans", "bonds"],
+        "deductible": false,
+        "reason": "Long-term liabilities are not immediately payable",
+        "reason_ar": "الخصوم طويلة الأجل لا تُطرح لعدم وجوب سدادها الفوري"
+      }
+    ],
+
+    "equity": [
+      {
+        "code": "PAID_IN_CAPITAL",
+        "label": "Paid-in capital",
+        "label_ar": "رأس المال",
+        "examples": ["share_capital", "contributed_capital", "capital_stock"],
+        "zakatable": false,
+        "included_in_base": false,
+        "reason": "Equity represents ownership claims on net assets, not zakatable wealth. Paid-in capital is excluded from the zakat base by design; neither added nor deducted.",
+        "reason_ar": "حقوق الملكية تمثل حقوق الملكية على صافي الأصول وليست أموالاً زكوية؛ رأس المال يُستبعد من الوعاء بقصد ولا يُضاف ولا يُطرح"
+      },
+      {
+        "code": "RETAINED_EARNINGS",
+        "label": "Retained earnings",
+        "label_ar": "الأرباح المحتجزة",
+        "examples": ["accumulated_profit", "retained_profit", "reserves"],
+        "zakatable": false,
+        "included_in_base": false,
+        "reason": "Equity represents ownership claims on net assets, not zakatable wealth. Retained earnings are excluded from the zakat base by design; neither added nor deducted.",
+        "reason_ar": "حقوق الملكية تمثل حقوق الملكية على صافي الأصول وليست أموالاً زكوية؛ الأرباح المحتجزة تُستبعد من الوعاء بقصد ولا تُضاف ولا تُطرح"
+      }
+    ],
+  
+    "extended_rules": {
+      "mixed_assets": {
+        "rule": "If an asset is partly used and partly intended for trade, only the trade portion is zakatable",
+        "requires_user_input": ["trade_percentage"],
+        "reason": "Zakat applies only to trade-intended wealth",
+        "reason_ar": "إذا كان الأصل يُستخدم جزئيًا ويُعد للتجارة جزئيًا فتجب الزكاة في الجزء المعد للبيع فقط"
+      },
+  
+      "receivable_strength": {
+        "strong_debt": {
+          "included": true,
+          "reason": "Strong collectible debts are equivalent to cash",
+          "reason_ar": "الدين القوي القابل للتحصيل يُعامل معاملة النقد"
+        },
+        "weak_debt": {
+          "included": false,
+          "postpone_until_collected": true,
+          "reason": "Uncertain debts are not immediately zakatable",
+          "reason_ar": "الدين الضعيف أو المشكوك فيه لا تجب فيه الزكاة إلا عند تحصيله"
+        }
+      },
+  
+      "ownership_separation": {
+        "sole_proprietorship": {
+          "exclude_personal_funds": true,
+          "reason": "Only company-designated funds are subject to zakat calculation",
+          "reason_ar": "يُشترط الفصل بين أموال المؤسسة وأموال المالك الخاصة"
+        }
+      },
+  
+      "intention_override": {
+        "fixed_asset_for_trade": {
+          "override_to": "INVENTORY",
+          "reason": "Assets intended for sale follow trade goods ruling",
+          "reason_ar": "إذا نُوي بيع الأصل الثابت يُعامل معاملة عروض التجارة"
+        },
+        "investment_for_trading": {
+          "override_to": "INVENTORY",
+          "reason": "Trading intention changes zakat classification",
+          "reason_ar": "الاستثمار المعد للتجارة يُصنف ضمن الأصول الزكوية"
+        }
+      }
+    }
+  }
