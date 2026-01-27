@@ -26,11 +26,21 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add EQUITY to itemcategory enum. Must run in autocommit so it is committed
+    # Ensure itemcategory enum exists first (defensive check for fresh databases)
+    # Then add EQUITY value. Must run in autocommit so it is committed
     # before we use it in the CHECK constraint (PG: "New enum values must be
     # committed before they can be used").
     engine = create_engine(settings.database_url, isolation_level="AUTOCOMMIT")
     with engine.connect() as ac_conn:
+        # Create enum if it doesn't exist (should already exist from 001_initial, but be safe)
+        ac_conn.execute(text("""
+            DO $$ BEGIN
+                CREATE TYPE itemcategory AS ENUM ('ASSET', 'LIABILITY');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;
+        """))
+        # Now add EQUITY value
         ac_conn.execute(text("ALTER TYPE itemcategory ADD VALUE IF NOT EXISTS 'EQUITY'"))
     engine.dispose()
 
