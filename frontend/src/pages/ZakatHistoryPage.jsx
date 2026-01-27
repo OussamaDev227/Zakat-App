@@ -63,18 +63,18 @@ export default function ZakatHistoryPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">سجل حسابات الزكاة</h1>
-        <p className="text-gray-600">عرض جميع حسابات الزكاة للشركة النشطة (مسودات ونهائية)</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">سجل حسابات الزكاة</h1>
+        <p className="text-sm sm:text-base text-gray-600">عرض جميع حسابات الزكاة للشركة النشطة (مسودات ونهائية)</p>
       </div>
 
       <CompanySelector />
 
       {/* Filter Buttons */}
-      <div className="mb-6 flex gap-3">
+      <div className="mb-6 flex flex-wrap gap-2 sm:gap-3">
         <button
           onClick={() => setFilter('ALL')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-bold transition-colors text-sm sm:text-base min-h-[44px] sm:min-h-0 ${
             filter === 'ALL'
               ? 'bg-blue-600 text-white shadow-md'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -84,7 +84,7 @@ export default function ZakatHistoryPage() {
         </button>
         <button
           onClick={() => setFilter('DRAFT')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-bold transition-colors text-sm sm:text-base min-h-[44px] sm:min-h-0 ${
             filter === 'DRAFT'
               ? 'bg-yellow-600 text-white shadow-md'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -94,7 +94,7 @@ export default function ZakatHistoryPage() {
         </button>
         <button
           onClick={() => setFilter('FINALIZED')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${
+          className={`px-3 sm:px-4 py-2 rounded-lg font-bold transition-colors text-sm sm:text-base min-h-[44px] sm:min-h-0 ${
             filter === 'FINALIZED'
               ? 'bg-green-600 text-white shadow-md'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'

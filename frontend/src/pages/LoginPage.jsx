@@ -55,7 +55,7 @@ export default function LoginPage() {
 
         <div className="relative grid md:grid-cols-2 bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-100 overflow-hidden">
           {/* Academic info side */}
-          <div className="bg-gradient-to-b from-blue-900 via-blue-800 to-slate-900 text-white px-8 py-10 flex flex-col justify-between">
+          <div className="bg-gradient-to-b from-blue-900 via-blue-800 to-slate-900 text-white px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1 text-xs font-semibold tracking-wide">
                 <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
@@ -97,12 +97,12 @@ export default function LoginPage() {
           </div>
 
           {/* Login side */}
-          <div className="px-8 py-10 bg-white">
+          <div className="px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 bg-white">
             <div className="flex flex-col h-full justify-center">
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 <div className="text-right">
-                  <h3 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">تسجيل الدخول</h3>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-600">
                     يرجى إدخال بيانات الاعتماد للوصول إلى واجهة حساب زكاة الشركات.
                   </p>
                 </div>

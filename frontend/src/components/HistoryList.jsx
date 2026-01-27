@@ -40,25 +40,25 @@ export default function HistoryList({ calculations }) {
                   <td>
                     <CalculationStatusBadge status={calc.status} />
                   </td>
-                  <td className="font-medium text-gray-800">
+                  <td className="font-medium text-gray-800 text-xs sm:text-sm">
                     {displayDate ? new Date(displayDate).toLocaleDateString('en-US', {
                       year: 'numeric',
-                      month: 'long',
+                      month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
                     }) : 'غير محدد'}
                   </td>
-                  <td className="font-bold text-gray-900">
+                  <td className="font-bold text-gray-900 text-sm sm:text-base">
                     {parseFloat(calc.zakat_base).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">د.ج</span>
                   </td>
-                  <td className="font-bold text-green-700 text-lg">
+                  <td className="font-bold text-green-700 text-base sm:text-lg">
                     {parseFloat(calc.zakat_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-green-600">د.ج</span>
                   </td>
                   <td>
                     <Link
                       to={`/zakat?calculation_id=${calc.calculation_id || calc.id}`}
-                      className="text-blue-700 hover:text-blue-900 text-sm font-bold hover:underline"
+                      className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                     >
                       {isDraft ? 'متابعة' : 'فتح الحساب'}
                     </Link>

@@ -95,19 +95,19 @@ export default function FinancialItemsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">إدارة البنود المالية</h1>
-          <p className="text-gray-600">إضافة وتعديل البنود المالية للشركة النشطة</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة البنود المالية</h1>
+          <p className="text-sm sm:text-base text-gray-600">إضافة وتعديل البنود المالية للشركة النشطة</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button 
             onClick={() => setShowExcelUpload(true)} 
-            className="btn-secondary text-lg"
+            className="btn-secondary text-base sm:text-lg w-full sm:w-auto"
           >
             📊 استيراد من Excel
           </button>
-          <button onClick={() => setShowForm(true)} className="btn-primary text-lg">
+          <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
             + إضافة بند مالي جديد
           </button>
         </div>

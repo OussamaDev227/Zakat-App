@@ -69,12 +69,12 @@ export default function CompaniesPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">إدارة الشركات</h1>
-          <p className="text-gray-600">إدارة بيانات الشركات وإعداداتها</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة الشركات</h1>
+          <p className="text-sm sm:text-base text-gray-600">إدارة بيانات الشركات وإعداداتها</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="btn-primary text-lg">
+        <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
           + إضافة شركة جديدة
         </button>
       </div>
@@ -119,19 +119,19 @@ export default function CompaniesPage() {
                     <td className="font-medium text-gray-700">{new Date(company.fiscal_year_start).toLocaleDateString('en-US')}</td>
                     <td className="font-medium text-gray-700">{new Date(company.fiscal_year_end).toLocaleDateString('en-US')}</td>
                     <td>
-                      <div className="flex gap-3 justify-end">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
                         <button
                           onClick={() => {
                             setEditingCompany(company);
                             setShowForm(true);
                           }}
-                          className="text-blue-700 hover:text-blue-900 text-sm font-bold hover:underline"
+                          className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                         >
                           تعديل
                         </button>
                         <button
                           onClick={() => handleDelete(company.id)}
-                          className="text-red-700 hover:text-red-900 text-sm font-bold hover:underline"
+                          className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                         >
                           حذف
                         </button>

@@ -59,7 +59,7 @@ export default function CompanySelector() {
           // #endregion
           setActiveCompany(selected);
         }}
-        className="input-field max-w-md bg-white font-semibold"
+        className="input-field w-full sm:max-w-md bg-white font-semibold"
       >
         <option value="">-- اختر شركة --</option>
         {companies.map((company) => {

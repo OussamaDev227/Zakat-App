@@ -20,8 +20,8 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card max-w-2xl border-2 border-blue-200 shadow-xl">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">
+    <form onSubmit={handleSubmit} className="card w-full max-w-2xl border-2 border-blue-200 shadow-xl">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900">
         {company ? 'تعديل الشركة' : 'إضافة شركة جديدة'}
       </h2>
 
@@ -55,7 +55,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
               بداية السنة المالية *
@@ -83,11 +83,11 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
           </div>
         </div>
 
-        <div className="flex gap-4 justify-end">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
+          <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
             إلغاء
           </button>
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="btn-primary w-full sm:w-auto order-1 sm:order-2">
             {company ? 'حفظ التعديلات' : 'إضافة'}
           </button>
         </div>

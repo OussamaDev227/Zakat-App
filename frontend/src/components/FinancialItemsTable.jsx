@@ -76,16 +76,16 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
                   {parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">د.ج</span>
                 </td>
                 <td>
-                  <div className="flex gap-3 justify-end">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
                     <button
                       onClick={() => onEdit(item)}
-                      className="text-blue-700 hover:text-blue-900 text-sm font-bold hover:underline"
+                      className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                     >
                       تعديل
                     </button>
                     <button
                       onClick={() => onDelete(item.id)}
-                      className="text-red-700 hover:text-red-900 text-sm font-bold hover:underline"
+                      className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                     >
                       حذف
                     </button>

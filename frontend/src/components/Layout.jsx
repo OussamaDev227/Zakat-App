@@ -4,6 +4,7 @@
  * Main app layout with RTL support, header, and navigation
  */
 
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCompany } from '../contexts/CompanyContext';
 import { getPrimaryReference } from '../config/academicReferences';
@@ -12,6 +13,7 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { activeCompany } = useCompany();
   const primaryRef = getPrimaryReference();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/companies', label: 'الشركات', labelEn: 'Companies' },
@@ -26,19 +28,20 @@ export default function Layout({ children }) {
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-700 to-blue-800 shadow-xl border-b-4 border-blue-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-8 space-x-reverse">
-              <h1 className="text-2xl font-bold text-white drop-shadow-md">
+          <div className="flex flex-wrap justify-between items-center min-h-[5rem] py-3 gap-3">
+            <div className="flex items-center flex-wrap gap-2 sm:gap-4 md:gap-8">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-md">
                 نظام دعم القرار لحساب زكاة الشركات
               </h1>
-              <p className="text-sm text-blue-100 font-semibold">Decision Support System for Corporate Zakat</p>
+              <p className="hidden sm:block text-xs sm:text-sm text-blue-100 font-semibold">Decision Support System for Corporate Zakat</p>
             </div>
             
             {activeCompany && (
-              <div className="bg-white/20 backdrop-blur-sm px-5 py-3 rounded-xl border-2 border-white/30 shadow-lg">
-                <p className="text-sm text-white font-semibold">
-                  <span className="font-bold">الشركة النشطة:</span>{' '}
-                  <span className="text-yellow-200 font-bold">
+              <div className="bg-white/20 backdrop-blur-sm px-3 sm:px-5 py-2 sm:py-3 rounded-xl border-2 border-white/30 shadow-lg max-w-full sm:max-w-none">
+                <p className="text-xs sm:text-sm text-white font-semibold whitespace-nowrap">
+                  <span className="font-bold hidden sm:inline">الشركة النشطة:</span>
+                  <span className="font-bold sm:hidden">الشركة:</span>{' '}
+                  <span className="text-yellow-200 font-bold truncate block sm:inline max-w-[150px] sm:max-w-none">
                     {/* #region agent log */}
                     {(()=>{fetch('http://127.0.0.1:7243/ingest/36bf502b-a8b0-4651-80f5-b666e22bc1b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Layout.jsx:38',message:'Rendering company name',data:{companyName:activeCompany.name,companyNameLength:activeCompany.name?.length,firstChar:activeCompany.name?.[0],firstCharCode:activeCompany.name?.[0]?.charCodeAt?.(0),isString:typeof activeCompany.name==='string'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});return activeCompany.name;})()}
                     {/* #endregion */}
@@ -53,14 +56,33 @@ export default function Layout({ children }) {
       {/* Navigation */}
       <nav className="bg-white shadow-md border-b-2 border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 space-x-reverse">
+          {/* Mobile menu button */}
+          <div className="md:hidden py-3">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex items-center gap-2 text-gray-700 font-bold hover:text-blue-700"
+              aria-label="Toggle menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+              <span>القائمة</span>
+            </button>
+          </div>
+
+          {/* Desktop navigation */}
+          <div className="hidden md:flex space-x-1 space-x-reverse">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-5 py-4 text-sm font-bold transition-all duration-200 ${
+                  className={`px-3 lg:px-5 py-4 text-sm font-bold transition-all duration-200 ${
                     isActive
                       ? 'text-blue-700 border-b-4 border-blue-700 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50 hover:border-b-4 hover:border-gray-300'
@@ -72,11 +94,35 @@ export default function Layout({ children }) {
               );
             })}
           </div>
+
+          {/* Mobile navigation */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-4 py-3 text-sm font-bold transition-all duration-200 border-b border-gray-100 ${
+                      isActive
+                        ? 'text-blue-700 bg-blue-50 border-r-4 border-r-blue-700'
+                        : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {item.label}
+                    <span className="text-xs text-gray-600 mr-2 font-normal">({item.labelEn})</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         {children}
       </main>
 

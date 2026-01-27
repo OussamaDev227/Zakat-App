@@ -114,8 +114,8 @@ export default function CalculationItemForm({ calculationId, item = null, onSubm
   const equityOptions = rules.equity || [];
 
   return (
-    <form onSubmit={handleSubmit} className="card border-2 border-blue-200 shadow-lg">
-      <h3 className="text-xl font-bold mb-4 text-gray-900">
+    <form onSubmit={handleSubmit} className="card w-full border-2 border-blue-200 shadow-lg">
+      <h3 className="text-lg sm:text-xl font-bold mb-4 text-gray-900">
         {item ? 'تعديل البند المالي' : 'إضافة بند مالي جديد'}
       </h3>
 
@@ -280,11 +280,11 @@ export default function CalculationItemForm({ calculationId, item = null, onSubm
           />
         </div>
 
-        <div className="flex gap-4 justify-end">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
+          <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
             إلغاء
           </button>
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="btn-primary w-full sm:w-auto order-1 sm:order-2">
             {item ? 'حفظ التعديلات' : 'إضافة'}
           </button>
         </div>
