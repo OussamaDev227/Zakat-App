@@ -5,7 +5,7 @@
  * No business logic here - just HTTP communication.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zakat-app-y6su.onrender.com';
 
 /**
  * Generic fetch wrapper with error handling

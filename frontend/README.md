@@ -24,7 +24,7 @@ npm install
 Create a `.env` file in the `frontend/` directory:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=https://zakat-app-y6su.onrender.com/
 ```
 
 ### 3. Run Development Server
