@@ -8,6 +8,7 @@ from app.services.category_mapper import map_category_to_zakat_code
 from app.services.zakat_service import ZakatService
 from app.rules.engine import RuleEngine
 from app.schemas.zakat import CalculationResponse
+from app.validators.financial_item_validators import find_duplicate_financial_items
 
 
 class ExcelIngestionService:
@@ -59,8 +60,9 @@ class ExcelIngestionService:
         # Process each row
         imported_count = 0
         errors = []
+        skipped_duplicates = []
         excluded_items = []
-        
+
         for row in rows:
             row_number = row.get('row_number', 0)
             item_name = row.get('item_name', '').strip()
@@ -183,7 +185,27 @@ class ExcelIngestionService:
                                 "errors": row_errors
                             })
                             continue
-                    
+
+                    # Duplicate detection: skip row if exact/normalized/similar name exists
+                    dup = find_duplicate_financial_items(
+                        self.db, company_id, item_name, exclude_item_id=None, use_fuzzy=True
+                    )
+                    if dup.is_duplicate:
+                        skipped_duplicates.append({
+                            "row_number": row_number,
+                            "item_name": item_name,
+                            "message": dup.message or "Duplicate or similar item already exists",
+                            "exact_match_id": dup.exact_match_id,
+                            "normalized_match_id": dup.normalized_match_id,
+                            "similar_match_ids": dup.similar_match_ids,
+                        })
+                        errors.append({
+                            "row_number": row_number,
+                            "item_name": item_name,
+                            "errors": [dup.message or "Duplicate or similar financial item; skipped. Consider merging."]
+                        })
+                        continue
+
                     # Create financial item
                     self.zakat_service.add_or_update_item(calculation_id, item_data)
                     imported_count += 1
@@ -233,6 +255,7 @@ class ExcelIngestionService:
             "total_rows": len(rows),
             "imported_rows": imported_count,
             "errors": errors,
+            "skipped_duplicates": skipped_duplicates,
             "total_zakatable_assets": total_zakatable_assets,
             "total_deductible_liabilities": total_deductible_liabilities,
             "zakat_base": zakat_base,

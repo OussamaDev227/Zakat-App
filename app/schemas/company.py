@@ -1,9 +1,15 @@
 """Company schemas."""
 from datetime import date
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from app.models.company import LegalType
+
+
+def _validate_fiscal_year_range(fiscal_year_start: date, fiscal_year_end: date) -> None:
+    """Raise ValueError if start >= end (validation must enforce start < end)."""
+    if fiscal_year_start >= fiscal_year_end:
+        raise ValueError("fiscal_year_start must be before fiscal_year_end (start < end)")
 
 
 class CompanyCreate(BaseModel):
@@ -13,6 +19,11 @@ class CompanyCreate(BaseModel):
     fiscal_year_start: date
     fiscal_year_end: date
 
+    @model_validator(mode="after")
+    def fiscal_year_start_before_end(self):
+        _validate_fiscal_year_range(self.fiscal_year_start, self.fiscal_year_end)
+        return self
+
 
 class CompanyUpdate(BaseModel):
     """Schema for updating a company."""
@@ -20,6 +31,11 @@ class CompanyUpdate(BaseModel):
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
+
+    @model_validator(mode="after")
+    def fiscal_year_start_before_end(self):
+        _validate_fiscal_year_range(self.fiscal_year_start, self.fiscal_year_end)
+        return self
 
 
 class CompanyResponse(BaseModel):

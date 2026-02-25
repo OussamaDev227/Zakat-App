@@ -1,14 +1,41 @@
 /**
  * Financial Items Table Component
- * 
- * Displays list of financial items for the active company
+ *
+ * Displays list of financial items for the active company.
+ * Highlights rows that have duplicate/similar names (normalized) for merge awareness.
  */
 
+import { useMemo } from 'react';
 import { useRules } from '../contexts/RulesContext';
+
+function normalizeName(name) {
+  if (!name || typeof name !== 'string') return '';
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 export default function FinancialItemsTable({ items, onEdit, onDelete }) {
   const { rules } = useRules();
-  
+
+  const duplicateIds = useMemo(() => {
+    const byNormalized = new Map();
+    for (const item of items) {
+      const n = normalizeName(item.name);
+      if (!n) continue;
+      if (!byNormalized.has(n)) byNormalized.set(n, []);
+      byNormalized.get(n).push(item.id);
+    }
+    const ids = new Set();
+    for (const idsList of byNormalized.values()) {
+      if (idsList.length > 1) idsList.forEach((id) => ids.add(id));
+    }
+    return ids;
+  }, [items]);
+
   // Helper: resolve type code to Arabic label only (never show English codes)
   const getTypeLabel = (item) => {
     if (!rules) {
@@ -56,7 +83,11 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id}>
+              <tr
+                key={item.id}
+                className={duplicateIds.has(item.id) ? 'bg-amber-50 border-l-4 border-l-amber-400' : ''}
+                title={duplicateIds.has(item.id) ? 'اسم مشابه لبند آخر - قد ترغب بالدمج أو التمييز' : undefined}
+              >
                 <td className="font-bold text-gray-900">
                   {item.name}
                 </td>

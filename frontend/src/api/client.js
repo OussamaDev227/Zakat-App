@@ -8,6 +8,27 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zakat-app-y6su.onrender.com';
 
 /**
+ * Format API error detail for display (422 validation array or object with message).
+ * @param {string|Array|object} detail - FastAPI detail: string, or array of {loc, msg}, or {message, ...}
+ * @param {number} status - HTTP status
+ * @returns {string} Human-readable error message
+ */
+function formatApiErrorDetail(detail, status) {
+  if (detail == null) return null;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((e) => {
+      const loc = (e.loc && e.loc.filter((x) => x !== 'body').join('.')) || '';
+      const msg = e.msg || e.message || '';
+      return loc ? `${loc}: ${msg}` : msg;
+    }).join('; ');
+  }
+  if (typeof detail === 'object' && detail.message) return detail.message;
+  if (typeof detail === 'object') return JSON.stringify(detail);
+  return String(detail);
+}
+
+/**
  * Generic fetch wrapper with error handling
  */
 async function fetchJson(url, options = {}) {
@@ -41,7 +62,8 @@ async function fetchJson(url, options = {}) {
       // #region agent log
       fetch('http://127.0.0.1:7243/ingest/36bf502b-a8b0-4651-80f5-b666e22bc1b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.js:37',message:'Error data parsed',data:{url:fullUrl,errorData:errorData,errorMessage:errorData.detail || response.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
       // #endregion
-      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      const message = formatApiErrorDetail(errorData.detail, response.status);
+      throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
     }
     
     // Handle 204 No Content

@@ -1,13 +1,13 @@
 /**
  * Financial Item Form Component
- * 
- * Create/Edit financial item form
- * 
+ *
+ * Create/Edit financial item form with validation (amount >= 0, required fields).
+ *
  * Asset types are strictly defined by zakat jurisprudence rules.
  * Asset classification is a jurisprudential constraint, not a user preference.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRules } from '../contexts/RulesContext';
 import { getAssetTypes } from '../api/lookups';
 
@@ -22,7 +22,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
     accounting_label: item?.accounting_label || '',
     liability_code: item?.liability_code ?? '',
     equity_code: item?.equity_code ?? '',
-    amount: item?.amount || '',
+    amount: item?.amount ?? '',
     metadata: item?.metadata || {},
   });
 
@@ -72,9 +72,28 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
     }
   }, [formData.asset_type, formData.category, assetTypes]);
 
+  const amountError = useMemo(() => {
+    const val = formData.amount;
+    if (val === '' || val == null) return 'المبلغ مطلوب';
+    const num = parseFloat(val);
+    if (Number.isNaN(num)) return 'المبلغ يجب أن يكون رقماً';
+    if (num < 0) return 'المبلغ لا يمكن أن يكون سالباً';
+    return null;
+  }, [formData.amount]);
+
+  const isFormValid = useMemo(() => {
+    const nameOk = (formData.name || '').trim().length > 0;
+    const amountOk = !amountError;
+    const categoryOk =
+      (formData.category === 'ASSET' && formData.asset_type) ||
+      (formData.category === 'LIABILITY' && formData.liability_code) ||
+      (formData.category === 'EQUITY' && formData.equity_code);
+    return nameOk && amountOk && categoryOk;
+  }, [formData.name, formData.amount, formData.category, formData.asset_type, formData.liability_code, formData.equity_code, amountError]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (formData.category === 'ASSET' && !formData.asset_type) {
       alert('يجب اختيار نوع الأصل');
       return;
@@ -87,7 +106,8 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
       alert('يجب اختيار نوع حقوق الملكية');
       return;
     }
-    
+    if (amountError || !isFormValid) return;
+
     const submitData = {
       name: formData.name,
       category: formData.category,
@@ -275,16 +295,27 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             step="0.01"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            className="input-field"
+            className={`input-field ${amountError ? 'border-red-500' : ''}`}
             placeholder="0.00"
+            aria-invalid={!!amountError}
+            aria-describedby={amountError ? 'amount-error' : undefined}
           />
+          {amountError && (
+            <p id="amount-error" className="text-red-600 text-sm font-medium mt-1" role="alert">
+              {amountError}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
           <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
             إلغاء
           </button>
-          <button type="submit" className="btn-primary w-full sm:w-auto order-1 sm:order-2">
+          <button
+            type="submit"
+            className="btn-primary w-full sm:w-auto order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isFormValid}
+          >
             {item ? 'حفظ التعديلات' : 'إضافة'}
           </button>
         </div>

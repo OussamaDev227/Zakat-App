@@ -1,10 +1,10 @@
 /**
  * Company Form Component
- * 
- * Create/Edit company form
+ *
+ * Create/Edit company form with fiscal year validation (start < end).
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function CompanyForm({ company = null, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
@@ -14,8 +14,26 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
     fiscal_year_end: company?.fiscal_year_end || '',
   });
 
+  const fiscalYearError = useMemo(() => {
+    if (!formData.fiscal_year_start || !formData.fiscal_year_end) return null;
+    const start = new Date(formData.fiscal_year_start);
+    const end = new Date(formData.fiscal_year_end);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+    if (start >= end) {
+      return 'بداية السنة المالية يجب أن تكون قبل نهايتها';
+    }
+    return null;
+  }, [formData.fiscal_year_start, formData.fiscal_year_end]);
+
+  const isFormValid = useMemo(() => {
+    const nameOk = (formData.name || '').trim().length > 0;
+    const datesOk = !!formData.fiscal_year_start && !!formData.fiscal_year_end && !fiscalYearError;
+    return nameOk && datesOk;
+  }, [formData.name, formData.fiscal_year_start, formData.fiscal_year_end, fiscalYearError]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!isFormValid || fiscalYearError) return;
     onSubmit(formData);
   };
 
@@ -65,7 +83,9 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
               required
               value={formData.fiscal_year_start}
               onChange={(e) => setFormData({ ...formData, fiscal_year_start: e.target.value })}
-              className="input-field"
+              className={`input-field ${fiscalYearError ? 'border-red-500' : ''}`}
+              aria-invalid={!!fiscalYearError}
+              aria-describedby={fiscalYearError ? 'fiscal-year-error' : undefined}
             />
           </div>
 
@@ -78,16 +98,27 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
               required
               value={formData.fiscal_year_end}
               onChange={(e) => setFormData({ ...formData, fiscal_year_end: e.target.value })}
-              className="input-field"
+              className={`input-field ${fiscalYearError ? 'border-red-500' : ''}`}
+              aria-invalid={!!fiscalYearError}
+              aria-describedby={fiscalYearError ? 'fiscal-year-error' : undefined}
             />
           </div>
         </div>
+        {fiscalYearError && (
+          <p id="fiscal-year-error" className="text-red-600 text-sm font-medium" role="alert">
+            {fiscalYearError}
+          </p>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
           <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
             إلغاء
           </button>
-          <button type="submit" className="btn-primary w-full sm:w-auto order-1 sm:order-2">
+          <button
+            type="submit"
+            className="btn-primary w-full sm:w-auto order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isFormValid}
+          >
             {company ? 'حفظ التعديلات' : 'إضافة'}
           </button>
         </div>

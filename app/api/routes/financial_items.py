@@ -6,7 +6,7 @@ import sqlalchemy as sa
 
 from app.db.session import get_db
 from app.schemas.financial_item import (
-    FinancialItemCreate, 
+    FinancialItemCreate,
     FinancialItemUpdate,
     FinancialItemResponse,
     FinancialItemListResponse
@@ -14,6 +14,7 @@ from app.schemas.financial_item import (
 from app.models.financial_item import FinancialItem, ItemCategory, AssetType
 from app.models.company import Company
 from app.rules.engine import RuleEngine
+from app.validators.financial_item_validators import find_duplicate_financial_items
 
 router = APIRouter()
 
@@ -30,11 +31,21 @@ async def create_financial_item(
     rule_engine: RuleEngine = Depends(get_rule_engine),
 ):
     """Create a new financial item with rule code validation."""
-    # Validate company exists
+    # Validate company exists and has valid fiscal year (start < end)
     company = db.query(Company).filter(Company.id == item_data.company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    
+    if company.fiscal_year_start >= company.fiscal_year_end:
+        raise HTTPException(
+            status_code=400,
+            detail="Company has invalid fiscal year (start must be before end). Please correct the company settings first."
+        )
+
+    # Duplicate detection: exact, normalized, and fuzzy
+    dup = find_duplicate_financial_items(db, item_data.company_id, item_data.name, exclude_item_id=None)
+    if dup.is_duplicate:
+        raise HTTPException(status_code=409, detail=dup.to_http_detail())
+
     # Validate rule codes
     if item_data.category == ItemCategory.ASSET:
         if not item_data.asset_type:
@@ -187,7 +198,20 @@ async def update_financial_item(
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Financial item not found")
-    
+
+    # Ensure company has valid fiscal year
+    company = db.query(Company).filter(Company.id == item.company_id).first()
+    if company and company.fiscal_year_start >= company.fiscal_year_end:
+        raise HTTPException(
+            status_code=400,
+            detail="Company has invalid fiscal year (start must be before end). Please correct the company settings first."
+        )
+
+    # Duplicate detection when name changes (exclude current item)
+    dup = find_duplicate_financial_items(db, item.company_id, item_data.name, exclude_item_id=item_id)
+    if dup.is_duplicate:
+        raise HTTPException(status_code=409, detail=dup.to_http_detail())
+
     # Validate rule codes
     if item_data.category == ItemCategory.ASSET:
         if not item_data.asset_type:

@@ -1,7 +1,7 @@
 """Company model."""
 import enum
 from datetime import date
-from sqlalchemy import Column, Integer, String, Date, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Date, Enum as SQLEnum, CheckConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -26,3 +26,8 @@ class Company(Base):
     # Relationships
     financial_items = relationship("FinancialItem", back_populates="company", cascade="all, delete-orphan")
     zakat_calculations = relationship("ZakatCalculation", back_populates="company", cascade="all, delete-orphan")
+
+    # Business rule: fiscal year start must be before end
+    __table_args__ = (
+        CheckConstraint("fiscal_year_start < fiscal_year_end", name="check_fiscal_year_start_before_end"),
+    )

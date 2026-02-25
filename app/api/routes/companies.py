@@ -15,7 +15,11 @@ async def create_company(
     company_data: CompanyCreate,
     db: Session = Depends(get_db),
 ):
-    """Create a new company."""
+    """
+    Create a new company.
+    Fiscal year validation: start < end is enforced by CompanyCreate schema and DB constraint.
+    Overlapping financial years: N/A in current schema (one fiscal year per company).
+    """
     company = Company(**company_data.model_dump())
     db.add(company)
     db.commit()
