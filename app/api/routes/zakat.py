@@ -18,6 +18,7 @@ from app.models.zakat_calculation import ZakatCalculation
 from app.models.company import Company
 from app.services.zakat_service import ZakatService
 from app.rules.engine import RuleEngine
+from app.core.security import get_current_company_id
 
 router = APIRouter()
 
@@ -44,24 +45,15 @@ def get_rule_engine(request: Request) -> RuleEngine:
     return request.app.state.rule_engine
 
 
-@router.post("/calculation/start/{company_id}", response_model=CalculationResponse)
+@router.post("/calculation/start", response_model=CalculationResponse)
 async def start_calculation(
-    company_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Create or resume a draft calculation for a company."""
-    # #region agent log
-    _log_backend("zakat.py:start_calculation:entry", "start_calculation endpoint called", {"company_id": company_id, "company_id_type": type(company_id).__name__}, "H2")
-    # #endregion
+    """Create or resume a draft calculation for the current company (from session)."""
     try:
-        # #region agent log
-        _log_backend("zakat.py:start_calculation:before_service", "About to create service", {}, "H2")
-        # #endregion
         service = ZakatService(db, rule_engine)
-        # #region agent log
-        _log_backend("zakat.py:start_calculation:before_call", "About to call start_calculation service", {}, "H2")
-        # #endregion
         calculation = service.start_calculation(company_id)
         # #region agent log
         _log_backend("zakat.py:start_calculation:after_call", "Service call completed", {"calculation_id": calculation.id if calculation else None}, "H2")
@@ -93,6 +85,15 @@ async def start_calculation(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+def _ensure_calculation_belongs_to_company(db: Session, calculation_id: int, company_id: int) -> ZakatCalculation:
+    calc = db.query(ZakatCalculation).filter(ZakatCalculation.id == calculation_id).first()
+    if not calc:
+        raise HTTPException(status_code=404, detail="Calculation not found")
+    if calc.company_id != company_id:
+        raise HTTPException(status_code=403, detail="Access denied to this calculation")
+    return calc
+
+
 @router.post("/calculation/{calculation_id}/item", response_model=CalculationResponse)
 async def add_or_update_item(
     calculation_id: int,
@@ -100,19 +101,15 @@ async def add_or_update_item(
     item_id: Optional[int] = Query(None, description="ID of existing item to update"),
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Add or update a financial item in a draft calculation."""
+    """Add or update a financial item in a draft calculation. Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
-        
-        # Convert Pydantic model to dict
         item_data = item.model_dump()
-        
-        # Add or update item (auto-recalculates)
         service.add_or_update_item(calculation_id, item_data, item_id)
         db.commit()
-        
-        # Get updated calculation with rules
         return service.get_calculation_with_rules(calculation_id)
     except ValueError as e:
         db.rollback()
@@ -124,8 +121,10 @@ async def recalculate(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Recalculate zakat for a draft calculation."""
+    """Recalculate zakat for a draft calculation. Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
         result = service.recalculate_calculation(calculation_id)
@@ -156,8 +155,10 @@ async def finalize(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Finalize a draft calculation (makes it read-only)."""
+    """Finalize a draft calculation (makes it read-only). Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
         service.finalize_calculation(calculation_id)
@@ -172,35 +173,20 @@ async def finalize(
 
 @router.get("/calculations", response_model=CalculationListResponse)
 async def list_calculations(
-    company_id: int = Query(..., description="Company ID (required)"),
     db: Session = Depends(get_db),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """List all zakat calculations for a company (drafts + finalized)."""
-    # #region agent log
-    _log_backend("zakat.py:list_calculations:entry", "list_calculations endpoint called", {"company_id": company_id}, "H2")
-    # #endregion
+    """List all zakat calculations for the current company (drafts + finalized)."""
     try:
-        # Validate company exists
         company = db.query(Company).filter(Company.id == company_id).first()
         if not company:
-            # #region agent log
-            _log_backend("zakat.py:list_calculations:error", "Company not found", {"company_id": company_id}, "H2")
-            # #endregion
             raise HTTPException(status_code=404, detail="Company not found")
-        
-        # Get all calculations for the company
         calculations = (
             db.query(ZakatCalculation)
             .filter(ZakatCalculation.company_id == company_id)
             .order_by(ZakatCalculation.created_at.desc())
             .all()
         )
-        
-        # #region agent log
-        _log_backend("zakat.py:list_calculations:before_convert", "About to convert calculations", {"count": len(calculations)}, "H2")
-        # #endregion
-        
-        # Convert to response format
         items = [
             CalculationListItem(
                 calculation_id=calc.id,
@@ -214,19 +200,11 @@ async def list_calculations(
             )
             for calc in calculations
         ]
-        
-        # #region agent log
-        _log_backend("zakat.py:list_calculations:success", "list_calculations succeeded", {"items_count": len(items)}, "H2")
-        # #endregion
-        
         return CalculationListResponse(items=items, direction="rtl")
     except HTTPException:
         raise
     except Exception as e:
-        # #region agent log
         import traceback
-        _log_backend("zakat.py:list_calculations:exception", "list_calculations unhandled exception", {"error": str(e), "error_type": type(e).__name__, "traceback": traceback.format_exc()}, "H2")
-        # #endregion
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
@@ -235,8 +213,10 @@ async def get_calculation(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Get a calculation with rules and items."""
+    """Get a calculation with rules and items. Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
         return service.get_calculation_with_rules(calculation_id)
@@ -251,8 +231,10 @@ async def link_item_to_calculation(
     amount: Optional[Decimal] = Query(None, description="Override amount (optional)"),
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Link an existing financial item to a calculation."""
+    """Link an existing financial item to a calculation. Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
         service.link_existing_item(calculation_id, financial_item_id, amount)
@@ -269,8 +251,10 @@ async def remove_item_from_calculation(
     item_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Remove a financial item from a calculation."""
+    """Remove a financial item from a calculation. Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
         service.remove_item_from_calculation(calculation_id, item_id)
@@ -286,8 +270,10 @@ async def create_revision(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Create a revision (clone) of a finalized calculation."""
+    """Create a revision (clone) of a finalized calculation. Calculation must belong to current company."""
+    _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
         new_calculation = service.create_revision(calculation_id)

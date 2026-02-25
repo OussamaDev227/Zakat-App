@@ -91,7 +91,7 @@ export default function ZakatPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await startCalculation(activeCompany.id);
+      const data = await startCalculation();
       setCalculation(data);
       // Update URL to include calculation_id
       setSearchParams({ calculation_id: data.calculation_id.toString() });
@@ -107,7 +107,7 @@ export default function ZakatPage() {
     if (!activeCompany) return;
 
     try {
-      const items = await getFinancialItems(activeCompany.id);
+      const items = await getFinancialItems();
       // Filter out items already in this calculation
       const calculationItemIds = new Set(calculation.items.map(item => item.item_id).filter(Boolean));
       const available = items.filter(item => !calculationItemIds.has(item.id));

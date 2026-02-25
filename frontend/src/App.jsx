@@ -16,6 +16,7 @@ import { RulesProvider } from './contexts/RulesContext';
 import { CompanyProvider } from './contexts/CompanyContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import CompanyRouteGuard from './components/CompanyRouteGuard';
 import LoginPage from './pages/LoginPage';
 import CompaniesPage from './pages/CompaniesPage';
 import FinancialItemsPage from './pages/FinancialItemsPage';
@@ -58,10 +59,10 @@ function App() {
                       <Routes>
                         <Route path="/" element={<RootRedirect />} />
                         <Route path="/companies" element={<CompaniesPage />} />
-                        <Route path="/financial-items" element={<FinancialItemsPage />} />
-                        <Route path="/zakat" element={<ZakatPage />} />
-                        <Route path="/history" element={<ZakatHistoryPage />} />
-                        <Route path="/history/:id" element={<ZakatCalculationDetailPage />} />
+                        <Route path="/financial-items" element={<CompanyRouteGuard><FinancialItemsPage /></CompanyRouteGuard>} />
+                        <Route path="/zakat" element={<CompanyRouteGuard><ZakatPage /></CompanyRouteGuard>} />
+                        <Route path="/history" element={<CompanyRouteGuard><ZakatHistoryPage /></CompanyRouteGuard>} />
+                        <Route path="/history/:id" element={<CompanyRouteGuard><ZakatCalculationDetailPage /></CompanyRouteGuard>} />
                         <Route path="/about-methodology" element={<AboutMethodologyPage />} />
                       </Routes>
                     </Layout>

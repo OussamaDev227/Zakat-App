@@ -37,16 +37,22 @@ export default function Layout({ children }) {
             </div>
             
             {activeCompany && (
-              <div className="bg-white/20 backdrop-blur-sm px-3 sm:px-5 py-2 sm:py-3 rounded-xl border-2 border-white/30 shadow-lg max-w-full sm:max-w-none">
-                <p className="text-xs sm:text-sm text-white font-semibold whitespace-nowrap">
-                  <span className="font-bold hidden sm:inline">الشركة النشطة:</span>
-                  <span className="font-bold sm:hidden">الشركة:</span>{' '}
-                  <span className="text-yellow-200 font-bold truncate block sm:inline max-w-[150px] sm:max-w-none">
-                    {/* #region agent log */}
-                    {(()=>{fetch('http://127.0.0.1:7243/ingest/36bf502b-a8b0-4651-80f5-b666e22bc1b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Layout.jsx:38',message:'Rendering company name',data:{companyName:activeCompany.name,companyNameLength:activeCompany.name?.length,firstChar:activeCompany.name?.[0],firstCharCode:activeCompany.name?.[0]?.charCodeAt?.(0),isString:typeof activeCompany.name==='string'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});return activeCompany.name;})()}
-                    {/* #endregion */}
-                  </span>
-                </p>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="bg-white/20 backdrop-blur-sm px-3 sm:px-5 py-2 sm:py-3 rounded-xl border-2 border-white/30 shadow-lg max-w-full sm:max-w-none">
+                  <p className="text-xs sm:text-sm text-white font-semibold whitespace-nowrap">
+                    <span className="font-bold hidden sm:inline">الشركة النشطة:</span>
+                    <span className="font-bold sm:hidden">الشركة:</span>{' '}
+                    <span className="text-yellow-200 font-bold truncate block sm:inline max-w-[150px] sm:max-w-none">
+                      {activeCompany.name}
+                    </span>
+                  </p>
+                </div>
+                <Link
+                  to="/companies"
+                  className="text-xs sm:text-sm text-white font-bold underline hover:text-yellow-200"
+                >
+                  تبديل الشركة
+                </Link>
               </div>
             )}
           </div>

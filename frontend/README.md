@@ -35,6 +35,10 @@ npm run dev
 
 The frontend will be available at `http://localhost:3000`
 
+## Deployment (Render) – SPA routing
+
+If you deploy the frontend as a **static site** on Render, direct links like `/login` or `/companies` will show "Not Found" until you add a **rewrite** so the server serves `index.html` for those paths. See [RENDER_SPA_ROUTING.md](../docs/RENDER_SPA_ROUTING.md) for step-by-step instructions in the Render Dashboard.
+
 ## Architecture
 
 ### Decision Support System Principles

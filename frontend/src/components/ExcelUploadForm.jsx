@@ -10,7 +10,7 @@ import { parseExcelFile, validateExcelStructure } from '../utils/excelParser';
 import { mapCategoryToZakatCode, getArabicLabel, categoryCodeToZakatClassification, CATEGORY_CODE_OPTIONS } from '../utils/categoryMapper';
 import { importExcelItems } from '../api/excelUpload';
 
-export default function ExcelUploadForm({ companyId, onImportComplete, onCancel }) {
+export default function ExcelUploadForm({ onImportComplete, onCancel }) {
   const [file, setFile] = useState(null);
   const [parsedRows, setParsedRows] = useState([]);
   const [validatedRows, setValidatedRows] = useState([]);
@@ -198,11 +198,6 @@ export default function ExcelUploadForm({ companyId, onImportComplete, onCancel 
 
   // Handle Create Items & Calculate
   async function handleCreateItemsAndCalculate() {
-    if (!companyId) {
-      setError('يرجى اختيار شركة أولاً');
-      return;
-    }
-
     // Validate all rows have category code
     const rowsWithoutCategory = validatedRows.filter(row => !row.categoryCode || row.categoryCode.trim() === '');
     if (rowsWithoutCategory.length > 0) {
@@ -226,7 +221,7 @@ export default function ExcelUploadForm({ companyId, onImportComplete, onCancel 
     try {
       const { submitForCalculation } = await import('../api/excelUpload');
       const preparedRows = prepareRowsForSubmission(validatedRows);
-      const result = await submitForCalculation(companyId, preparedRows, true);
+      const result = await submitForCalculation(preparedRows, true);
       
       if (onImportComplete) {
         onImportComplete(result);
@@ -246,11 +241,6 @@ export default function ExcelUploadForm({ companyId, onImportComplete, onCancel 
 
   // Handle Calculate Only
   async function handleCalculateOnly() {
-    if (!companyId) {
-      setError('يرجى اختيار شركة أولاً');
-      return;
-    }
-
     // Validate all rows have category code
     const rowsWithoutCategory = validatedRows.filter(row => !row.categoryCode || row.categoryCode.trim() === '');
     if (rowsWithoutCategory.length > 0) {
@@ -274,7 +264,7 @@ export default function ExcelUploadForm({ companyId, onImportComplete, onCancel 
     try {
       const { submitForCalculation } = await import('../api/excelUpload');
       const preparedRows = prepareRowsForSubmission(validatedRows);
-      const result = await submitForCalculation(companyId, preparedRows, false);
+      const result = await submitForCalculation(preparedRows, false);
       
       // Show calculation results
       setImportResults({
@@ -523,14 +513,14 @@ export default function ExcelUploadForm({ companyId, onImportComplete, onCancel 
                 <button
                   onClick={handleCreateItemsAndCalculate}
                   className="btn-primary"
-                  disabled={importing || !companyId || validRows === 0}
+                  disabled={importing || validRows === 0}
                 >
                   {importing ? 'جاري المعالجة...' : 'إنشاء البنود وحساب الزكاة'}
                 </button>
                 <button
                   onClick={handleCalculateOnly}
                   className="btn-secondary"
-                  disabled={importing || !companyId || validRows === 0}
+                  disabled={importing || validRows === 0}
                 >
                   {importing ? 'جاري الحساب...' : 'حساب الزكاة فقط'}
                 </button>

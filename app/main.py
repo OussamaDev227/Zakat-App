@@ -8,7 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
 from app.rules.engine import RuleEngine
-from app.api.routes import companies, financial_items, zakat, rules, lookups, excel_upload
+from app.api.routes import companies, financial_items, zakat, rules, lookups, excel_upload, auth
 
 
 def _log_request(request: Request):
@@ -87,6 +87,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(companies.router, prefix="/companies", tags=["companies"])
 app.include_router(financial_items.router, prefix="/financial-items", tags=["financial-items"])
 app.include_router(zakat.router, prefix="/zakat", tags=["zakat"])

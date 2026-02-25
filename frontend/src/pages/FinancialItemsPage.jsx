@@ -14,7 +14,6 @@ import {
 } from '../api/financialItems';
 import FinancialItemForm from '../components/FinancialItemForm';
 import FinancialItemsTable from '../components/FinancialItemsTable';
-import CompanySelector from '../components/CompanySelector';
 import ExcelUploadForm from '../components/ExcelUploadForm';
 
 export default function FinancialItemsPage() {
@@ -35,10 +34,9 @@ export default function FinancialItemsPage() {
 
   async function loadItems() {
     if (!activeCompany) return;
-
     try {
       setLoading(true);
-      const data = await getFinancialItems(activeCompany.id);
+      const data = await getFinancialItems();
       setItems(data);
     } catch (error) {
       console.error('Failed to load items:', error);
@@ -49,16 +47,12 @@ export default function FinancialItemsPage() {
   }
 
   async function handleSubmit(formData) {
-    if (!activeCompany) {
-      alert('يرجى اختيار شركة أولاً');
-      return;
-    }
-
+    if (!activeCompany) return;
     try {
       if (editingItem) {
-        await updateFinancialItem(editingItem.id, { ...formData, company_id: activeCompany.id });
+        await updateFinancialItem(editingItem.id, formData);
       } else {
-        await createFinancialItem({ ...formData, company_id: activeCompany.id });
+        await createFinancialItem(formData);
       }
       await loadItems();
       setShowForm(false);
@@ -81,17 +75,7 @@ export default function FinancialItemsPage() {
     }
   }
 
-  if (!activeCompany) {
-    return (
-      <div>
-        <h1 className="text-2xl font-bold mb-6">إدارة البنود المالية</h1>
-        <CompanySelector />
-        <div className="card text-center py-8">
-          <p className="text-gray-700 font-medium">يرجى اختيار شركة لعرض وإدارة البنود المالية</p>
-        </div>
-      </div>
-    );
-  }
+  if (!activeCompany) return null;
 
   return (
     <div>
@@ -113,12 +97,9 @@ export default function FinancialItemsPage() {
         </div>
       </div>
 
-      <CompanySelector />
-
       {showExcelUpload && (
         <div className="mb-6">
           <ExcelUploadForm
-            companyId={activeCompany.id}
             onImportComplete={async (result) => {
               // Refresh items list after import
               await loadItems();

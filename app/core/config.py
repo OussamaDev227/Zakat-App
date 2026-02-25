@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     api_title: str = "Corporate Zakat Calculation API"
     api_version: str = "1.0.0"
     
+    # Auth: JWT secret (required in production)
+    secret_key: str = "change-me-in-production-use-env-secret"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 480  # 8 hours
+    
+    # Default company password for existing companies (migration backfill only)
+    default_company_password: str = "ChangeMe123"
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

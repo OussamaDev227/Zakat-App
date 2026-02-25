@@ -1,25 +1,31 @@
 /**
  * Excel Upload API
  * 
- * Functions for uploading Excel files or importing parsed items
+ * Functions for uploading Excel files or importing parsed items.
+ * Company is taken from session (backend); do not pass companyId.
  */
+
+import { getCompanyToken } from './authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zakat-app-y6su.onrender.com';
 
 /**
- * Upload Excel file to backend endpoint
- * @param {number} companyId - Company ID
+ * Upload Excel file to backend endpoint (company from session).
  * @param {File} file - Excel file
  * @returns {Promise<Object>} Upload result with calculation and import statistics
  */
-export async function uploadExcelFile(companyId, file) {
+export async function uploadExcelFile(file) {
   const formData = new FormData();
   formData.append('file', file);
   
-  const url = `${API_BASE_URL}/zakat/excel/upload/${companyId}`;
+  const url = `${API_BASE_URL}/zakat/excel/upload`;
+  const headers = {};
+  const token = getCompanyToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   
   const response = await fetch(url, {
     method: 'POST',
+    headers,
     body: formData,
   });
   
@@ -32,22 +38,19 @@ export async function uploadExcelFile(companyId, file) {
 }
 
 /**
- * Import parsed Excel items by creating them via financial items API
- * @param {number} companyId - Company ID
+ * Import parsed Excel items by creating them via financial items API (company from session).
  * @param {Array} items - Array of validated item objects
  * @returns {Promise<Array>} Array of created financial items
  */
-export async function importExcelItems(companyId, items) {
+export async function importExcelItems(items) {
   const { createFinancialItem } = await import('./financialItems');
   
   const createdItems = [];
   const errors = [];
   
-  // Create items one by one to handle individual errors
   for (const item of items) {
     try {
       const itemData = {
-        company_id: companyId,
         name: item.item_name,
         category: item.mapped.category,
         amount: item.amount,
@@ -83,31 +86,25 @@ export async function importExcelItems(companyId, items) {
 }
 
 /**
- * Submit items for zakat calculation
- * @param {number} companyId - Company ID
+ * Submit items for zakat calculation (company from session).
  * @param {Array} items - Array of prepared item objects with category_code, amount, etc.
  * @param {boolean} createItems - If true, create items in database and link to calculation. If false, calculate only without saving items.
  * @returns {Promise<Object>} Calculation result with calculation_id, zakat_base, zakat_amount, etc.
  */
-export async function submitForCalculation(companyId, items, createItems = true) {
+export async function submitForCalculation(items, createItems = true) {
   const { startCalculation, addItemToCalculation } = await import('./zakat');
   const { createFinancialItem } = await import('./financialItems');
   
   if (createItems) {
-    // Option A: Create Items & Calculate
-    // 1. Start or get draft calculation (this auto-links unlinked items)
-    const calculation = await startCalculation(companyId);
+    const calculation = await startCalculation();
     const calculationId = calculation.calculation_id;
     
-    // 2. Create financial items (they will be auto-linked by startCalculation if unlinked)
     const createdItems = [];
     const errors = [];
     
     for (const item of items) {
       try {
-        // Create financial item
         const itemData = {
-          company_id: companyId,
           name: item.item_name,
           category: item.category,
           amount: item.amount,
@@ -139,9 +136,7 @@ export async function submitForCalculation(companyId, items, createItems = true)
       throw new Error(`Failed to create items: ${errors.map(e => e.error).join('; ')}`);
     }
     
-    // 3. Start calculation again to auto-link the newly created items
-    // This will link all unlinked items and recalculate
-    const updatedCalculation = await startCalculation(companyId);
+    const updatedCalculation = await startCalculation();
     
     // 4. Get final calculation result
     const { getCalculation } = await import('./zakat');
@@ -154,9 +149,7 @@ export async function submitForCalculation(companyId, items, createItems = true)
       calculation: finalCalculation
     };
   } else {
-    // Option B: Calculate Only (without creating items)
-    // Create a temporary calculation by adding items directly to a draft calculation
-    const calculation = await startCalculation(companyId);
+    const calculation = await startCalculation();
     const calculationId = calculation.calculation_id;
     
     // Add items directly to calculation without creating permanent financial items

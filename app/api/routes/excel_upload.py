@@ -10,6 +10,7 @@ from app.schemas.excel_upload import ExcelUploadResponse
 from app.models.company import Company
 from app.services.excel_ingestion_service import ExcelIngestionService
 from app.rules.engine import RuleEngine
+from app.core.security import get_current_company_id
 
 router = APIRouter()
 
@@ -19,15 +20,16 @@ def get_rule_engine(request: Request) -> RuleEngine:
     return request.app.state.rule_engine
 
 
-@router.post("/excel/upload/{company_id}", response_model=ExcelUploadResponse)
+@router.post("/excel/upload", response_model=ExcelUploadResponse)
 async def upload_excel_file(
-    company_id: int,
     file: UploadFile = File(..., description="Excel file (.xlsx) with financial statement data"),
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
     """
     Upload and process Excel file containing financial statement items.
+    Company is taken from session only.
     
     Expected columns in Excel file:
     - item_name (required): Name of the financial item

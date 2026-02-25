@@ -10,15 +10,11 @@
 import { get, post, del } from './client';
 
 /**
- * Start or resume a draft calculation for a company
- * @param {number} companyId - Company ID
+ * Start or resume a draft calculation for the current company (from session).
  * @returns {Promise<Object>} Calculation object with status, items, rules_used
  */
-export async function startCalculation(companyId) {
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/36bf502b-a8b0-4651-80f5-b666e22bc1b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'zakat.js:19',message:'startCalculation API call',data:{companyId:companyId,url:`/zakat/calculation/start/${companyId}`,urlType:typeof companyId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-  // #endregion
-  return post(`/zakat/calculation/start/${companyId}`);
+export async function startCalculation() {
+  return post('/zakat/calculation/start');
 }
 
 /**
@@ -63,12 +59,11 @@ export async function getCalculation(calculationId) {
 }
 
 /**
- * Get all calculations for a company (drafts + finalized)
- * @param {number} companyId - Company ID
+ * Get all calculations for the current company (drafts + finalized).
  * @returns {Promise<Array>} Array of calculation objects
  */
-export async function getCalculationsForCompany(companyId) {
-  const response = await get(`/zakat/calculations?company_id=${companyId}`);
+export async function getCalculationsForCompany() {
+  const response = await get('/zakat/calculations');
   return response.items || [];
 }
 

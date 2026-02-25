@@ -1,6 +1,6 @@
 """Company schemas."""
 from datetime import date
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, model_validator
 
 from app.models.company import LegalType
@@ -18,6 +18,7 @@ class CompanyCreate(BaseModel):
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
+    password: Optional[str] = None  # Optional; if provided, stored hashed as company_password_hash
 
     @model_validator(mode="after")
     def fiscal_year_start_before_end(self):
@@ -31,6 +32,7 @@ class CompanyUpdate(BaseModel):
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
+    password: Optional[str] = None  # Optional; if provided, update company_password_hash
 
     @model_validator(mode="after")
     def fiscal_year_start_before_end(self):
@@ -39,20 +41,33 @@ class CompanyUpdate(BaseModel):
 
 
 class CompanyResponse(BaseModel):
-    """Schema for company response."""
+    """Schema for company response (never includes password hash)."""
     id: int
     name: str
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
-    
-    class Config:
-        from_attributes = True
+
+    model_config = {"from_attributes": True}
+
+
+class CompanyMinimalResponse(BaseModel):
+    """Minimal company for selection list (id + name only)."""
+    id: int
+    name: str
+
+    model_config = {"from_attributes": True}
 
 
 class CompanyListResponse(BaseModel):
-    """Schema for list of companies."""
+    """Schema for list of companies (full)."""
     items: List[CompanyResponse]
-    
-    class Config:
-        from_attributes = True
+
+    model_config = {"from_attributes": True}
+
+
+class CompanyMinimalListResponse(BaseModel):
+    """Schema for minimal list (e.g. company selection / switch)."""
+    items: List[CompanyMinimalResponse]
+
+    model_config = {"from_attributes": True}

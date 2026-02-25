@@ -7,8 +7,7 @@ from app.models.financial_item import ItemCategory, AssetType
 
 
 class FinancialItemCreate(BaseModel):
-    """Schema for creating a financial item."""
-    company_id: int
+    """Schema for creating a financial item. company_id is set from session on backend."""
     name: str
     category: ItemCategory
     asset_type: Optional[AssetType] = None  # Required for ASSET category

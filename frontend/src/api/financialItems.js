@@ -5,14 +5,13 @@
 import { get, post, put, del } from './client';
 
 /**
- * Get financial items for a company
- * @param {number} companyId - Company ID
+ * Get financial items for the current company (from session).
  * @param {string} category - Optional filter: 'ASSET' or 'LIABILITY'
  */
-export async function getFinancialItems(companyId, category = null) {
-  let url = `/financial-items?company_id=${companyId}`;
+export async function getFinancialItems(category = null) {
+  let url = '/financial-items';
   if (category) {
-    url += `&category=${category}`;
+    url += `?category=${category}`;
   }
   const response = await get(url);
   return response.items || [];

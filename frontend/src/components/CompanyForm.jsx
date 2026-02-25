@@ -12,6 +12,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
     legal_type: company?.legal_type || 'LLC',
     fiscal_year_start: company?.fiscal_year_start || '',
     fiscal_year_end: company?.fiscal_year_end || '',
+    password: '',
   });
 
   const fiscalYearError = useMemo(() => {
@@ -34,7 +35,10 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isFormValid || fiscalYearError) return;
-    onSubmit(formData);
+    const toSubmit = { ...formData };
+    if (!(toSubmit.password || '').trim()) delete toSubmit.password;
+    else toSubmit.password = toSubmit.password.trim();
+    onSubmit(toSubmit);
   };
 
   return (
@@ -109,6 +113,19 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             {fiscalYearError}
           </p>
         )}
+
+        <div>
+          <label className="block text-sm font-bold text-gray-900 mb-2">
+            كلمة مرور الشركة (اختياري)
+          </label>
+          <input
+            type="password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="input-field"
+            placeholder={company ? 'اتركه فارغاً للإبقاء على كلمة المرور الحالية' : 'للدخول إلى هذه الشركة لاحقاً'}
+          />
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
           <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">

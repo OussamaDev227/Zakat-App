@@ -1,37 +1,104 @@
 /**
  * Companies Page
- * 
- * Manage companies: list, create, edit, delete
+ *
+ * - No company session: show minimal list; "Select" opens password modal. "Add company" to create.
+ * - Has session: show current company only (edit/delete), "Switch Company" (password required).
  */
 
 import { useState, useEffect } from 'react';
-import { getCompanies, createCompany, updateCompany, deleteCompany } from '../api/companies';
+import {
+  getCompaniesMinimal,
+  getCompanies,
+  createCompany,
+  updateCompany,
+  deleteCompany,
+} from '../api/companies';
 import { useCompany } from '../contexts/CompanyContext';
 import CompanyForm from '../components/CompanyForm';
-import CompanySelector from '../components/CompanySelector';
+import CompanyPasswordModal from '../components/CompanyPasswordModal';
 
 export default function CompaniesPage() {
-  const { setActiveCompany } = useCompany();
-  const [companies, setCompanies] = useState([]);
+  const {
+    activeCompany,
+    hasCompanySession,
+    selectCompany,
+    clearCompanySession,
+    setActiveCompany,
+  } = useCompany();
+  const [companiesMinimal, setCompaniesMinimal] = useState([]);
+  const [currentCompanyDetail, setCurrentCompanyDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
+  const [passwordModal, setPasswordModal] = useState(null);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState(null);
 
   useEffect(() => {
-    loadCompanies();
-  }, []);
+    if (hasCompanySession) {
+      loadCurrentCompany();
+    } else {
+      loadMinimal();
+    }
+  }, [hasCompanySession]);
 
-  async function loadCompanies() {
+  async function loadMinimal() {
     try {
       setLoading(true);
-      const data = await getCompanies();
-      setCompanies(data);
+      const data = await getCompaniesMinimal();
+      setCompaniesMinimal(data);
     } catch (error) {
       console.error('Failed to load companies:', error);
       alert('فشل تحميل الشركات: ' + error.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadCurrentCompany() {
+    try {
+      setLoading(true);
+      const data = await getCompanies();
+      setCurrentCompanyDetail(data[0] || null);
+    } catch (error) {
+      console.error('Failed to load current company:', error);
+      setCurrentCompanyDetail(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openPasswordModal(company) {
+    setPasswordModal(company);
+    setPasswordError(null);
+  }
+
+  function closePasswordModal() {
+    setPasswordModal(null);
+    setPasswordError(null);
+  }
+
+  async function handlePasswordSubmit(password) {
+    if (!passwordModal) return;
+    setPasswordLoading(true);
+    setPasswordError(null);
+    try {
+      await selectCompany(passwordModal.id, password);
+      closePasswordModal();
+      if (hasCompanySession) {
+        await loadCurrentCompany();
+      }
+    } catch (error) {
+      setPasswordError(error.message || 'كلمة المرور غير صحيحة');
+    } finally {
+      setPasswordLoading(false);
+    }
+  }
+
+  function handleSwitchCompany() {
+    clearCompanySession();
+    setCurrentCompanyDetail(null);
+    loadMinimal();
   }
 
   async function handleSubmit(formData) {
@@ -41,29 +108,42 @@ export default function CompaniesPage() {
       } else {
         await createCompany(formData);
       }
-      await loadCompanies();
       setShowForm(false);
       setEditingCompany(null);
+      if (hasCompanySession) {
+        await loadCurrentCompany();
+      } else {
+        await loadMinimal();
+      }
     } catch (error) {
       alert('فشل الحفظ: ' + error.message);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm('هل أنت متأكد من حذف هذه الشركة؟ سيتم حذف جميع البنود المالية والحسابات المرتبطة بها.')) {
+    if (
+      !confirm(
+        'هل أنت متأكد من حذف هذه الشركة؟ سيتم حذف جميع البنود المالية والحسابات المرتبطة بها.'
+      )
+    ) {
       return;
     }
-
     try {
       await deleteCompany(id);
-      await loadCompanies();
-      setActiveCompany(null);
+      if (activeCompany && activeCompany.id === id) {
+        clearCompanySession();
+        setCurrentCompanyDetail(null);
+      }
+      await loadMinimal();
+      if (hasCompanySession) {
+        await loadCurrentCompany();
+      }
     } catch (error) {
       alert('فشل الحذف: ' + error.message);
     }
   }
 
-  if (loading) {
+  if (loading && !companiesMinimal.length && !currentCompanyDetail) {
     return <div className="text-center py-8 text-gray-700 font-medium">جاري التحميل...</div>;
   }
 
@@ -72,11 +152,33 @@ export default function CompaniesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة الشركات</h1>
-          <p className="text-sm sm:text-base text-gray-600">إدارة بيانات الشركات وإعداداتها</p>
+          <p className="text-sm sm:text-base text-gray-600">
+            {hasCompanySession
+              ? 'الشركة الحالية. استخدم "تبديل الشركة" للدخول إلى شركة أخرى (ستُطلب كلمة المرور).'
+              : 'اختر شركة وأدخل كلمة المرور للدخول، أو أضف شركة جديدة.'}
+          </p>
         </div>
-        <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
-          + إضافة شركة جديدة
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {hasCompanySession && (
+            <button
+              type="button"
+              onClick={handleSwitchCompany}
+              className="px-4 py-2 border-2 border-blue-600 text-blue-700 rounded-lg font-bold hover:bg-blue-50"
+            >
+              تبديل الشركة
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setEditingCompany(null);
+              setShowForm(true);
+            }}
+            className="btn-primary text-base sm:text-lg w-full sm:w-auto"
+          >
+            + إضافة شركة جديدة
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -92,56 +194,107 @@ export default function CompaniesPage() {
         </div>
       )}
 
-      <CompanySelector />
+      {passwordModal && (
+        <CompanyPasswordModal
+          companyName={passwordModal.name}
+          onConfirm={handlePasswordSubmit}
+          onCancel={closePasswordModal}
+          loading={passwordLoading}
+          error={passwordError}
+        />
+      )}
 
       <div className="card border-2 border-blue-100">
-        {companies.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-700 font-medium">لا توجد شركات. ابدأ بإضافة شركة جديدة.</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>الاسم</th>
-                  <th>النوع</th>
-                  <th>بداية السنة المالية</th>
-                  <th>نهاية السنة المالية</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {companies.map((company) => (
-                  <tr key={company.id}>
-                    <td className="font-bold text-gray-900">{company.name}</td>
-                    <td className="font-semibold text-gray-800">{company.legal_type === 'LLC' ? 'ذات مسؤولية محدودة' : 'مؤسسة فردية'}</td>
-                    <td className="font-medium text-gray-700">{new Date(company.fiscal_year_start).toLocaleDateString('en-US')}</td>
-                    <td className="font-medium text-gray-700">{new Date(company.fiscal_year_end).toLocaleDateString('en-US')}</td>
+        {hasCompanySession ? (
+          currentCompanyDetail ? (
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>النوع</th>
+                    <th>بداية السنة المالية</th>
+                    <th>نهاية السنة المالية</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="font-bold text-gray-900">{currentCompanyDetail.name}</td>
+                    <td className="font-semibold text-gray-800">
+                      {currentCompanyDetail.legal_type === 'LLC'
+                        ? 'ذات مسؤولية محدودة'
+                        : 'مؤسسة فردية'}
+                    </td>
+                    <td className="font-medium text-gray-700">
+                      {new Date(currentCompanyDetail.fiscal_year_start).toLocaleDateString(
+                        'en-US'
+                      )}
+                    </td>
+                    <td className="font-medium text-gray-700">
+                      {new Date(currentCompanyDetail.fiscal_year_end).toLocaleDateString('en-US')}
+                    </td>
                     <td>
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
                         <button
+                          type="button"
                           onClick={() => {
-                            setEditingCompany(company);
+                            setEditingCompany(currentCompanyDetail);
                             setShowForm(true);
                           }}
-                          className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
+                          className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
                         >
                           تعديل
                         </button>
                         <button
-                          onClick={() => handleDelete(company.id)}
-                          className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
+                          type="button"
+                          onClick={() => handleDelete(currentCompanyDetail.id)}
+                          className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
                         >
                           حذف
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-700 font-medium">
+              لا يمكن تحميل بيانات الشركة الحالية.
+            </div>
+          )
+        ) : (
+          <>
+            {companiesMinimal.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-700 font-medium">لا توجد شركات. ابدأ بإضافة شركة جديدة.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm font-bold text-gray-700 mb-3">
+                  اختر شركة وأدخل كلمة المرور للدخول:
+                </p>
+                <ul className="divide-y divide-gray-200">
+                  {companiesMinimal.map((company) => (
+                    <li
+                      key={company.id}
+                      className="flex flex-wrap items-center justify-between gap-3 py-3"
+                    >
+                      <span className="font-bold text-gray-900">{company.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => openPasswordModal(company)}
+                        className="btn-primary text-sm py-2 px-4"
+                      >
+                        دخول
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

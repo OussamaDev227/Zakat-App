@@ -2,8 +2,10 @@
  * API Client - Base fetch wrapper
  * 
  * This module provides a thin wrapper around fetch for calling backend APIs.
- * No business logic here - just HTTP communication.
+ * When a company session exists, Authorization: Bearer <token> is sent (see authStore).
  */
+
+import { getCompanyToken } from './authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zakat-app-y6su.onrender.com';
 
@@ -34,11 +36,16 @@ function formatApiErrorDetail(detail, status) {
 async function fetchJson(url, options = {}) {
   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
   
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  const token = getCompanyToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
     ...options,
   };
 

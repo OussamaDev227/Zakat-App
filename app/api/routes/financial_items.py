@@ -15,6 +15,7 @@ from app.models.financial_item import FinancialItem, ItemCategory, AssetType
 from app.models.company import Company
 from app.rules.engine import RuleEngine
 from app.validators.financial_item_validators import find_duplicate_financial_items
+from app.core.security import get_current_company_id
 
 router = APIRouter()
 
@@ -29,10 +30,10 @@ async def create_financial_item(
     item_data: FinancialItemCreate,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Create a new financial item with rule code validation."""
-    # Validate company exists and has valid fiscal year (start < end)
-    company = db.query(Company).filter(Company.id == item_data.company_id).first()
+    """Create a new financial item with rule code validation. Company is taken from session only."""
+    company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     if company.fiscal_year_start >= company.fiscal_year_end:
@@ -42,7 +43,7 @@ async def create_financial_item(
         )
 
     # Duplicate detection: exact, normalized, and fuzzy
-    dup = find_duplicate_financial_items(db, item_data.company_id, item_data.name, exclude_item_id=None)
+    dup = find_duplicate_financial_items(db, company_id, item_data.name, exclude_item_id=None)
     if dup.is_duplicate:
         raise HTTPException(status_code=409, detail=dup.to_http_detail())
 
@@ -123,6 +124,7 @@ async def create_financial_item(
         pass
     # #endregion
     
+    item_dict["company_id"] = company_id
     item = FinancialItem(**item_dict)
     db.add(item)
     
@@ -156,12 +158,11 @@ async def create_financial_item(
 
 @router.get("", response_model=FinancialItemListResponse)
 async def list_financial_items(
-    company_id: int = Query(..., description="Company ID (required)"),
     category: Optional[ItemCategory] = Query(None, description="Filter by category (optional)"),
     db: Session = Depends(get_db),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """List financial items for a company, optionally filtered by category."""
-    # Validate company exists
+    """List financial items for the current company (from session). Optionally filtered by category."""
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -179,11 +180,14 @@ async def list_financial_items(
 async def get_financial_item(
     item_id: int,
     db: Session = Depends(get_db),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Get a financial item by ID."""
+    """Get a financial item by ID. Only if it belongs to the current company."""
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Financial item not found")
+    if item.company_id != company_id:
+        raise HTTPException(status_code=403, detail="Access denied to this item")
     return FinancialItemResponse.from_orm_with_metadata(item)
 
 
@@ -193,11 +197,14 @@ async def update_financial_item(
     item_data: FinancialItemUpdate,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Update a financial item with rule code validation."""
+    """Update a financial item with rule code validation. Only if it belongs to the current company."""
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Financial item not found")
+    if item.company_id != company_id:
+        raise HTTPException(status_code=403, detail="Access denied to this item")
 
     # Ensure company has valid fiscal year
     company = db.query(Company).filter(Company.id == item.company_id).first()
@@ -256,12 +263,14 @@ async def update_financial_item(
 async def delete_financial_item(
     item_id: int,
     db: Session = Depends(get_db),
+    company_id: int = Depends(get_current_company_id),
 ):
-    """Delete a financial item."""
+    """Delete a financial item. Only if it belongs to the current company."""
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Financial item not found")
-    
+    if item.company_id != company_id:
+        raise HTTPException(status_code=403, detail="Access denied to this item")
     db.delete(item)
     db.commit()
     return None

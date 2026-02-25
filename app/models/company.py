@@ -22,6 +22,7 @@ class Company(Base):
     legal_type = Column(SQLEnum(LegalType), nullable=False)
     fiscal_year_start = Column(Date, nullable=False)
     fiscal_year_end = Column(Date, nullable=False)
+    company_password_hash = Column(String, nullable=True)  # bcrypt hash; required for company login
 
     # Relationships
     financial_items = relationship("FinancialItem", back_populates="company", cascade="all, delete-orphan")
