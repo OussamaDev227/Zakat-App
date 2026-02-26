@@ -1,5 +1,5 @@
 """Zakat calculation service."""
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
@@ -67,7 +67,7 @@ class ZakatService:
             self.db.add(calculation)
             self.db.flush()
         
-        # Auto-link all unlinked financial items for this company
+        # Auto-link all unlinked financial items for this company (copy acquisition_date when linking)
         unlinked_items = (
             self.db.query(FinancialItem)
             .filter(
@@ -166,6 +166,8 @@ class ZakatService:
                 item.liability_code = item_data["liability_code"]
             if "equity_code" in item_data:
                 item.equity_code = item_data["equity_code"]
+            if "acquisition_date" in item_data:
+                item.acquisition_date = item_data["acquisition_date"]
             if category == "EQUITY":
                 item.asset_type = None
                 item.liability_code = None
@@ -190,6 +192,7 @@ class ZakatService:
                 liability_code=lc,
                 equity_code=ec,
                 amount=item_data["amount"],
+                acquisition_date=item_data.get("acquisition_date"),
                 item_metadata=metadata,
             )
             self.db.add(item)
@@ -231,12 +234,20 @@ class ZakatService:
             ZakatItemResult.calculation_id == calculation_id
         ).delete()
         
-        # Calculate zakat base and item results
+        # Load company for Nisab
+        company = calculation.company
+        nisab_value = company.zakat_nisab_value if company else None
+        today = date.today()
+        HAWL_DAYS = 354  # 1 lunar year
+        
+        # Pipeline: classify → hawl filter → sum → nisab check → zakat
         zakat_base = Decimal("0")
         item_results = []
         rule_codes_used = set()
+        items_excluded_hawl = 0
         
         for item in financial_items:
+            # 1) Classify (rule engine)
             included, included_amount, explanation_ar, rule_code = self.rule_engine.calculate_item_result(
                 category=item.category.value,
                 asset_type=item.asset_type,
@@ -246,10 +257,21 @@ class ZakatService:
                 metadata=item.item_metadata or {},
             )
             
+            # 2) Hawl filter: item zakatable only if 1 lunar year passed since acquisition_date
+            hawl_passed = True
+            if item.acquisition_date is not None:
+                hawl_date = item.acquisition_date + timedelta(days=HAWL_DAYS)
+                hawl_passed = today >= hawl_date
+            if included and not hawl_passed:
+                items_excluded_hawl += 1
+                included = False
+                included_amount = Decimal("0")
+                explanation_ar = "لم يمر عليه الحول"
+            
             zakat_base += included_amount
             rule_codes_used.add(rule_code)
             
-            # Create item result
+            # Create item result (persist hawl_passed for UI/report)
             item_result = ZakatItemResult(
                 calculation_id=calculation_id,
                 financial_item_id=item.id,
@@ -257,6 +279,7 @@ class ZakatService:
                 included_amount=included_amount,
                 explanation_ar=explanation_ar,
                 rule_code=rule_code,
+                hawl_passed=hawl_passed,
             )
             self.db.add(item_result)
             
@@ -270,12 +293,16 @@ class ZakatService:
                     included_amount=included_amount,
                     explanation_ar=explanation_ar,
                     rule_code=rule_code,
+                    hawl_passed=hawl_passed,
                 )
             )
         
-        # Calculate zakat amount
+        # 3) Nisab check: if total_zakat_base < nisab then zakat_due = 0
         zakat_rate = Decimal(str(self.rule_engine.get_zakat_rate()))
-        zakat_amount = zakat_base * zakat_rate
+        if nisab_value is not None and zakat_base < nisab_value:
+            zakat_amount = Decimal("0")
+        else:
+            zakat_amount = zakat_base * zakat_rate
         
         # Update calculation
         calculation.zakat_base = zakat_base
@@ -379,9 +406,16 @@ class ZakatService:
                     included_amount=item_result.included_amount,
                     explanation_ar=item_result.explanation_ar,
                     rule_code=item_result.rule_code,
+                    hawl_passed=getattr(item_result, "hawl_passed", None),
                 )
             )
             rule_codes_used.add(item_result.rule_code)
+        
+        # Count items excluded due to hawl (explanation set to "لم يمر عليه الحول" in recalculate)
+        items_excluded_hawl = sum(
+            1 for r in item_results_db
+            if getattr(r, "explanation_ar", "") == "لم يمر عليه الحول"
+        )
         
         # Build rules_used list
         rules_used = []
@@ -397,12 +431,19 @@ class ZakatService:
                     )
                 )
         
-        # Load company info
+        # Load company info (Nisab)
         company = calculation.company
         company_name = company.name if company else None
         company_type = company.legal_type.value if company else None
         fiscal_year_start = company.fiscal_year_start if company else None
         fiscal_year_end = company.fiscal_year_end if company else None
+        nisab_value = company.zakat_nisab_value if company else None
+        below_nisab = (
+            nisab_value is not None and calculation.zakat_base < nisab_value
+        )
+        nisab_status_ar = (
+            "لا زكاة — دون النصاب" if below_nisab and nisab_value is not None else None
+        )
         
         return CalculationResponse(
             calculation_id=calculation.id,
@@ -414,6 +455,10 @@ class ZakatService:
             status=calculation.status.value,
             zakat_base=calculation.zakat_base,
             zakat_amount=calculation.zakat_amount,
+            nisab_value=nisab_value,
+            below_nisab=below_nisab,
+            nisab_status_ar=nisab_status_ar,
+            items_excluded_hawl=items_excluded_hawl,
             rules_used=rules_used,
             items=items,
             created_at=calculation.created_at,
@@ -472,6 +517,7 @@ class ZakatService:
             liability_code=financial_item.liability_code,
             equity_code=financial_item.equity_code,
             amount=amount_override if amount_override is not None else financial_item.amount,
+            acquisition_date=financial_item.acquisition_date,
             item_metadata=financial_item.item_metadata.copy() if financial_item.item_metadata else {},
         )
         self.db.add(new_item)
@@ -562,6 +608,7 @@ class ZakatService:
                 liability_code=original_item.liability_code,
                 equity_code=original_item.equity_code,
                 amount=original_item.amount,
+                acquisition_date=original_item.acquisition_date,
                 item_metadata=original_item.item_metadata.copy() if original_item.item_metadata else {},
             )
             self.db.add(new_item)

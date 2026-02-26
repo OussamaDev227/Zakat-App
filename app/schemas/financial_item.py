@@ -1,7 +1,8 @@
 """Financial item schemas."""
+from datetime import date
 from decimal import Decimal
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.financial_item import ItemCategory, AssetType
 
@@ -15,7 +16,17 @@ class FinancialItemCreate(BaseModel):
     liability_code: Optional[str] = None
     equity_code: Optional[str] = None  # Required for EQUITY category
     amount: Decimal = Field(ge=0, decimal_places=2)
+    acquisition_date: Optional[date] = None  # تاريخ التملك — required in UI; if missing, backend may default for Hawl
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("asset_type", mode="before")
+    @classmethod
+    def coerce_inventory(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if isinstance(v, str) and v.upper() == "INVENTORY":
+            return AssetType.TRADING_GOODS
+        return v
 
 
 class FinancialItemUpdate(BaseModel):
@@ -27,7 +38,17 @@ class FinancialItemUpdate(BaseModel):
     liability_code: Optional[str] = None
     equity_code: Optional[str] = None  # Required for EQUITY category
     amount: Decimal = Field(ge=0, decimal_places=2)
+    acquisition_date: Optional[date] = None  # تاريخ التملك — required when creating
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("asset_type", mode="before")
+    @classmethod
+    def coerce_inventory(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if isinstance(v, str) and v.upper() == "INVENTORY":
+            return AssetType.TRADING_GOODS
+        return v
 
 
 class FinancialItemResponse(BaseModel):
@@ -41,6 +62,7 @@ class FinancialItemResponse(BaseModel):
     liability_code: Optional[str]
     equity_code: Optional[str]
     amount: Decimal
+    acquisition_date: Optional[date] = None
     metadata: Dict[str, Any]
     
     class Config:
@@ -59,6 +81,7 @@ class FinancialItemResponse(BaseModel):
             'liability_code': obj.liability_code,
             'equity_code': getattr(obj, 'equity_code', None),
             'amount': obj.amount,
+            'acquisition_date': getattr(obj, 'acquisition_date', None),
             'metadata': obj.item_metadata,
         }
         return cls(**data)

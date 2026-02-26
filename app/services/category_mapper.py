@@ -12,11 +12,19 @@ CATEGORY_MAPPINGS: Dict[str, Tuple[str, Optional[AssetType], Optional[str], Opti
     "bank balance": ("ASSET", AssetType.CASH, None, None, {}),
     "bank": ("ASSET", AssetType.CASH, None, None, {}),
     
-    "inventory": ("ASSET", AssetType.INVENTORY, None, None, {}),
-    "finished goods": ("ASSET", AssetType.INVENTORY, None, None, {}),
-    "raw materials": ("ASSET", AssetType.INVENTORY, None, None, {}),
-    "goods for resale": ("ASSET", AssetType.INVENTORY, None, None, {}),
-    "trade goods": ("ASSET", AssetType.INVENTORY, None, None, {}),
+    # Trading goods (merchandise) — zakatable
+    "inventory": ("ASSET", AssetType.TRADING_GOODS, None, None, {}),  # backward compat: default to trading goods
+    "finished goods": ("ASSET", AssetType.TRADING_GOODS, None, None, {}),
+    "goods for resale": ("ASSET", AssetType.TRADING_GOODS, None, None, {}),
+    "trade goods": ("ASSET", AssetType.TRADING_GOODS, None, None, {}),
+    "trading goods": ("ASSET", AssetType.TRADING_GOODS, None, None, {}),
+    "merchandise": ("ASSET", AssetType.TRADING_GOODS, None, None, {}),
+    # Production inventory (raw materials, WIP) — classified per framework
+    "raw materials": ("ASSET", AssetType.PRODUCTION_INVENTORY, None, None, {}),
+    "work in progress": ("ASSET", AssetType.PRODUCTION_INVENTORY, None, None, {}),
+    "wip": ("ASSET", AssetType.PRODUCTION_INVENTORY, None, None, {}),
+    "production inventory": ("ASSET", AssetType.PRODUCTION_INVENTORY, None, None, {}),
+    "manufacturing stock": ("ASSET", AssetType.PRODUCTION_INVENTORY, None, None, {}),
     
     "receivable": ("ASSET", AssetType.RECEIVABLE, None, None, {"collectibility": "strong_debt"}),
     "accounts receivable": ("ASSET", AssetType.RECEIVABLE, None, None, {"collectibility": "strong_debt"}),

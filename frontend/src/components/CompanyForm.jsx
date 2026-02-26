@@ -12,6 +12,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
     legal_type: company?.legal_type || 'LLC',
     fiscal_year_start: company?.fiscal_year_start || '',
     fiscal_year_end: company?.fiscal_year_end || '',
+    zakat_nisab_value: company?.zakat_nisab_value != null ? String(company.zakat_nisab_value) : '',
     password: '',
   });
 
@@ -38,6 +39,9 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
     const toSubmit = { ...formData };
     if (!(toSubmit.password || '').trim()) delete toSubmit.password;
     else toSubmit.password = toSubmit.password.trim();
+    if ((toSubmit.zakat_nisab_value || '').trim() === '') toSubmit.zakat_nisab_value = null;
+    else toSubmit.zakat_nisab_value = parseFloat(toSubmit.zakat_nisab_value);
+    if (Number.isNaN(toSubmit.zakat_nisab_value)) toSubmit.zakat_nisab_value = null;
     onSubmit(toSubmit);
   };
 
@@ -113,6 +117,24 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             {fiscalYearError}
           </p>
         )}
+
+        <div>
+          <label className="block text-sm font-bold text-gray-900 mb-2">
+            Nisab Value (قيمة النصاب)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.zakat_nisab_value}
+            onChange={(e) => setFormData({ ...formData, zakat_nisab_value: e.target.value })}
+            className="input-field"
+            placeholder="الحد الأدنى للزكاة"
+          />
+          <p className="text-xs text-gray-600 mt-1">
+            Minimum Zakat threshold equivalent to 85g gold value (company currency).
+          </p>
+        </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">

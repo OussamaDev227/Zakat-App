@@ -19,9 +19,10 @@ class TimeCondition(BaseModel):
 
 
 class ValuationRules(BaseModel):
-    """Valuation rules."""
+    """Valuation rules. Trading goods and production inventory are distinct per Zakat accounting."""
     cash: str
-    inventory: str
+    trading_goods: str
+    production_inventory: str
     receivables: str
 
 

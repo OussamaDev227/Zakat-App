@@ -13,7 +13,9 @@
 const ARABIC_TO_ENGLISH_MAP = {
   // Zakatable assets
   "النقدية وما في حكمها": "Cash",
-  "المخزونات وعروض التجارة": "Inventory",
+  "المخزونات وعروض التجارة": "Trading Goods",  // backward compat: map to Trading Goods
+  "عروض التجارة / البضاعة المعدة للبيع": "Trading Goods",
+  "المخزون الإنتاجي": "Production Inventory",
   "الذمم المدينة": "Receivable",
   
   // Liabilities
@@ -41,11 +43,19 @@ const CATEGORY_MAPPINGS = {
   "bank balance": ["ASSET", "CASH", null, null, {}],
   "bank": ["ASSET", "CASH", null, null, {}],
   
-  "inventory": ["ASSET", "INVENTORY", null, null, {}],
-  "finished goods": ["ASSET", "INVENTORY", null, null, {}],
-  "raw materials": ["ASSET", "INVENTORY", null, null, {}],
-  "goods for resale": ["ASSET", "INVENTORY", null, null, {}],
-  "trade goods": ["ASSET", "INVENTORY", null, null, {}],
+  // Trading goods (merchandise) — zakatable
+  "inventory": ["ASSET", "TRADING_GOODS", null, null, {}],  // backward compat
+  "finished goods": ["ASSET", "TRADING_GOODS", null, null, {}],
+  "goods for resale": ["ASSET", "TRADING_GOODS", null, null, {}],
+  "trade goods": ["ASSET", "TRADING_GOODS", null, null, {}],
+  "trading goods": ["ASSET", "TRADING_GOODS", null, null, {}],
+  "merchandise": ["ASSET", "TRADING_GOODS", null, null, {}],
+  // Production inventory — classified per framework
+  "raw materials": ["ASSET", "PRODUCTION_INVENTORY", null, null, {}],
+  "work in progress": ["ASSET", "PRODUCTION_INVENTORY", null, null, {}],
+  "wip": ["ASSET", "PRODUCTION_INVENTORY", null, null, {}],
+  "production inventory": ["ASSET", "PRODUCTION_INVENTORY", null, null, {}],
+  "manufacturing stock": ["ASSET", "PRODUCTION_INVENTORY", null, null, {}],
   
   "receivable": ["ASSET", "RECEIVABLE", null, null, { collectibility: "strong_debt" }],
   "accounts receivable": ["ASSET", "RECEIVABLE", null, null, { collectibility: "strong_debt" }],
@@ -100,7 +110,8 @@ const CATEGORY_MAPPINGS = {
 // English category names to Arabic labels (for display)
 const ENGLISH_TO_ARABIC_LABELS = {
   "Cash": "النقدية وما في حكمها",
-  "Inventory": "المخزونات وعروض التجارة",
+  "Trading Goods": "عروض التجارة / البضاعة المعدة للبيع",
+  "Production Inventory": "المخزون الإنتاجي",
   "Receivable": "الذمم المدينة",
   "Liability": "الخصوم قصيرة الأجل",
   "Long-term Loan": "الخصوم طويلة الأجل",
@@ -111,7 +122,8 @@ const ENGLISH_TO_ARABIC_LABELS = {
 // Zakat codes to Arabic labels (for display)
 const ZAKAT_CODE_TO_ARABIC = {
   "CASH": "النقدية وما في حكمها",
-  "INVENTORY": "المخزونات وعروض التجارة",
+  "TRADING_GOODS": "عروض التجارة / البضاعة المعدة للبيع",
+  "PRODUCTION_INVENTORY": "المخزون الإنتاجي",
   "RECEIVABLE": "الذمم المدينة",
   "SHORT_TERM_LIABILITY": "الخصوم قصيرة الأجل",
   "LONG_TERM_LIABILITY": "الخصوم طويلة الأجل",
@@ -120,6 +132,7 @@ const ZAKAT_CODE_TO_ARABIC = {
   "FIXED_ASSET": "الأصول الثابتة العينية",
   "INTANGIBLE_ASSET": "الأصول المعنوية",
   "LONG_TERM_INVESTMENT": "الاستثمارات طويلة الأجل",
+  "INVENTORY": "عروض التجارة / البضاعة المعدة للبيع",  // legacy; map to Trading Goods label
 };
 
 /**
@@ -145,11 +158,14 @@ export function getArabicLabel(englishCategory = null, zakatCode = null) {
 
 /**
  * Category Code options for dropdown (English codes with Arabic labels)
+ * Assets: Cash, Trading Goods, Production Inventory, Fixed Assets, Receivables
  */
 export const CATEGORY_CODE_OPTIONS = [
   { value: "Cash", label: "النقدية وما في حكمها" },
-  { value: "Inventory", label: "المخزونات وعروض التجارة" },
+  { value: "Trading Goods", label: "عروض التجارة / البضاعة المعدة للبيع" },
+  { value: "Production Inventory", label: "المخزون الإنتاجي" },
   { value: "Receivable", label: "الذمم المدينة" },
+  { value: "Fixed Assets", label: "الأصول الثابتة العينية" },
   { value: "Liability", label: "الخصوم قصيرة الأجل" },
   { value: "Long-term Loan", label: "الخصوم طويلة الأجل" },
   { value: "Capital", label: "رأس المال" },
@@ -187,10 +203,20 @@ export function categoryCodeToZakatClassification(categoryCode) {
         error: null
       };
     
-    case "Inventory":
+    case "Trading Goods":
       return {
         category: "ASSET",
-        asset_type: "INVENTORY",
+        asset_type: "TRADING_GOODS",
+        liability_code: null,
+        equity_code: null,
+        metadata: {},
+        error: null
+      };
+    
+    case "Production Inventory":
+      return {
+        category: "ASSET",
+        asset_type: "PRODUCTION_INVENTORY",
         liability_code: null,
         equity_code: null,
         metadata: {},
@@ -227,6 +253,16 @@ export function categoryCodeToZakatClassification(categoryCode) {
         error: null
       };
     
+    case "Fixed Assets":
+      return {
+        category: "ASSET",
+        asset_type: "FIXED_ASSET",
+        liability_code: null,
+        equity_code: null,
+        metadata: {},
+        error: null
+      };
+    
     case "Capital":
       return {
         category: "EQUITY",
@@ -254,7 +290,7 @@ export function categoryCodeToZakatClassification(categoryCode) {
         liability_code: null,
         equity_code: null,
         metadata: {},
-        error: `Unknown category code: ${categoryCode}`
+        error: `Unknown category code: ${categoryCode}. Use: Cash, Trading Goods, Production Inventory, Receivable, Fixed Assets, Liability, Long-term Loan, Capital, Retained Earnings`
       };
   }
 }
@@ -459,6 +495,6 @@ export function mapCategoryToZakatCode(category, itemName = null) {
     metadata: {},
     originalCategory: originalCategory,
     englishCategory: englishCategory || categoryToMap,
-    error: `Unknown category: ${categoryToMap}. Please use one of: Cash, Inventory, Receivable, Liability, Long-term Loan, Capital, Retained Earnings`
+    error: `Unknown category: ${categoryToMap}. Please use one of: Cash, Trading Goods, Production Inventory, Receivable, Fixed Assets, Liability, Long-term Loan, Capital, Retained Earnings`
   };
 }

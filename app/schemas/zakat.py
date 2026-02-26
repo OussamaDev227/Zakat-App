@@ -15,6 +15,7 @@ class ZakatItemResult(BaseModel):
     included_amount: Decimal
     explanation_ar: str
     rule_code: str
+    hawl_passed: Optional[bool] = None  # True if 1 lunar year passed since acquisition (for status badge)
 
 
 class RuleUsed(BaseModel):
@@ -36,6 +37,10 @@ class CalculationResponse(BaseModel):
     status: str  # "DRAFT" or "FINALIZED"
     zakat_base: Decimal
     zakat_amount: Decimal
+    nisab_value: Optional[Decimal] = None  # قيمة النصاب (from company)
+    below_nisab: bool = False  # True if zakat_base < nisab_value (no Zakat due)
+    nisab_status_ar: Optional[str] = None  # e.g. "No Zakat — below Nisab" / لا زكاة — دون النصاب
+    items_excluded_hawl: int = 0  # Count of items excluded because Hawl not completed
     rules_used: list[RuleUsed]
     items: list[ZakatItemResult]
     created_at: datetime
@@ -53,6 +58,7 @@ class FinancialItemCreate(BaseModel):
     liability_code: Optional[str] = None
     equity_code: Optional[str] = None  # Required for EQUITY category
     amount: Decimal
+    acquisition_date: Optional[date] = None  # تاريخ التملك — for Hawl
     metadata: dict = {}
 
 

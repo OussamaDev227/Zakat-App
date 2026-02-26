@@ -1,5 +1,5 @@
 """Zakat item result model."""
-from sqlalchemy import Column, Integer, Boolean, Numeric, Text, String, ForeignKey
+from sqlalchemy import Column, Integer, Boolean, Numeric, Text, String, ForeignKey  # noqa: F401 Boolean used
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -16,6 +16,7 @@ class ZakatItemResult(Base):
     included_amount = Column(Numeric(18, 2), nullable=False)
     explanation_ar = Column(Text, nullable=False)  # Arabic justification from rules
     rule_code = Column(String, nullable=False)  # Code of the rule applied
+    hawl_passed = Column(Boolean, nullable=True)  # True if 1 lunar year passed since acquisition_date
 
     # Relationships
     calculation = relationship("ZakatCalculation", back_populates="item_results")

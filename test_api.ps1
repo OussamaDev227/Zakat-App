@@ -35,7 +35,7 @@ $cashItem = @{
     company_id = $companyId
     name = "النقدية في البنك"
     category = "ASSET"
-    asset_code = "CASH"
+    asset_type = "CASH"
     amount = 100000.00
     metadata = @{}
 } | ConvertTo-Json
@@ -43,12 +43,12 @@ $cashItem = @{
 $cash = Invoke-RestMethod -Uri "$baseUrl/financial-items" -Method Post -Body $cashItem -ContentType "application/json; charset=utf-8"
 Write-Host "   ✓ Cash added: $($cash.amount)" -ForegroundColor Green
 
-# Inventory Asset
-$inventoryItem = @{
+# Trading Goods Asset (merchandise)
+$tradingGoodsItem = @{
     company_id = $companyId
     name = "المخزون السلعي"
     category = "ASSET"
-    asset_code = "INVENTORY"
+    asset_type = "TRADING_GOODS"
     amount = 50000.00
     metadata = @{
         intent = "trade"
@@ -56,15 +56,15 @@ $inventoryItem = @{
     }
 } | ConvertTo-Json
 
-$inventory = Invoke-RestMethod -Uri "$baseUrl/financial-items" -Method Post -Body $inventoryItem -ContentType "application/json; charset=utf-8"
-Write-Host "   ✓ Inventory added: $($inventory.amount)" -ForegroundColor Green
+$tradingGoods = Invoke-RestMethod -Uri "$baseUrl/financial-items" -Method Post -Body $tradingGoodsItem -ContentType "application/json; charset=utf-8"
+Write-Host "   ✓ Trading goods added: $($tradingGoods.amount)" -ForegroundColor Green
 
 # Receivable Asset
 $receivableItem = @{
     company_id = $companyId
     name = "الذمم المدينة"
     category = "ASSET"
-    asset_code = "RECEIVABLE"
+    asset_type = "RECEIVABLE"
     amount = 30000.00
     metadata = @{
         collectibility = "strong"

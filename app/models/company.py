@@ -1,7 +1,7 @@
 """Company model."""
 import enum
 from datetime import date
-from sqlalchemy import Column, Integer, String, Date, Enum as SQLEnum, CheckConstraint
+from sqlalchemy import Column, Integer, String, Date, Numeric, Enum as SQLEnum, CheckConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -23,6 +23,7 @@ class Company(Base):
     fiscal_year_start = Column(Date, nullable=False)
     fiscal_year_end = Column(Date, nullable=False)
     company_password_hash = Column(String, nullable=True)  # bcrypt hash; required for company login
+    zakat_nisab_value = Column(Numeric(18, 2), nullable=True)  # Minimum Zakat threshold (قيمة النصاب), company currency
 
     # Relationships
     financial_items = relationship("FinancialItem", back_populates="company", cascade="all, delete-orphan")

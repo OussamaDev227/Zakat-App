@@ -1,6 +1,6 @@
 """Financial item model."""
 import enum
-from sqlalchemy import Column, Integer, String, Numeric, Enum as SQLEnum, ForeignKey, CheckConstraint  # pyright: ignore[reportMissingImports]
+from sqlalchemy import Column, Integer, String, Numeric, Date, Enum as SQLEnum, ForeignKey, CheckConstraint  # pyright: ignore[reportMissingImports]
 from sqlalchemy.dialects.postgresql import JSONB  # pyright: ignore[reportMissingImports]
 from sqlalchemy.orm import relationship  # pyright: ignore[reportMissingImports]
 
@@ -20,9 +20,14 @@ class AssetType(str, enum.Enum):
     
     These are FINAL and must not be editable by users.
     Asset classification is a jurisprudential constraint, not a user preference.
+    
+    Inventories and trading goods are distinct per Zakat accounting standards:
+    - TRADING_GOODS: goods held for resale (merchandise) → zakatable.
+    - PRODUCTION_INVENTORY: raw materials, WIP, manufacturing stock → classified per framework.
     """
     CASH = "CASH"  # النقدية وما في حكمها
-    INVENTORY = "INVENTORY"  # المخزونات وعروض التجارة
+    TRADING_GOODS = "TRADING_GOODS"  # عروض التجارة / البضاعة المعدة للبيع
+    PRODUCTION_INVENTORY = "PRODUCTION_INVENTORY"  # مخزون إنتاجي (مواد أولية، تحت التصنيع)
     RECEIVABLE = "RECEIVABLE"  # الذمم المدينة
     FIXED_ASSET = "FIXED_ASSET"  # الأصول الثابتة العينية
     INTANGIBLE_ASSET = "INTANGIBLE_ASSET"  # الأصول المعنوية
@@ -42,6 +47,7 @@ class FinancialItem(Base):
     liability_code = Column(String, nullable=True)  # From rules JSON
     equity_code = Column(String, nullable=True)  # From rules JSON (required for EQUITY)
     amount = Column(Numeric(18, 2), nullable=False)
+    acquisition_date = Column(Date, nullable=True)  # تاريخ التملك — for Hawl (1 lunar year)
     item_metadata = Column(JSONB, nullable=False, default=dict)  # JSONB in Postgres: intent, trade_percentage, collectibility
 
     calculation_id = Column(Integer, ForeignKey("zakat_calculations.id", ondelete="CASCADE"), nullable=True, index=True)

@@ -57,8 +57,10 @@ export default function ZakatResultTable({ items }) {
                     : '0.00 د.ج'}
                 </td>
                 <td>
-                  <span className={`badge ${item.included ? 'badge-success' : 'badge-danger'}`}>
-                    {item.included ? 'زكوي' : 'غير زكوي'}
+                  <span className={`badge ${
+                    item.included ? 'badge-success' : (item.hawl_passed === false ? 'badge-warning' : 'badge-danger')
+                  }`}>
+                    {item.included ? 'زكوي' : (item.hawl_passed === false ? 'لم يمر عليه الحول' : 'غير زكوي')}
                   </span>
                 </td>
                 {hasRuleCode && (

@@ -1,5 +1,6 @@
 """Company schemas."""
 from datetime import date
+from decimal import Decimal
 from typing import List, Optional
 from pydantic import BaseModel, model_validator
 
@@ -18,6 +19,7 @@ class CompanyCreate(BaseModel):
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
+    zakat_nisab_value: Optional[Decimal] = None  # قيمة النصاب — minimum Zakat threshold (company currency)
     password: Optional[str] = None  # Optional; if provided, stored hashed as company_password_hash
 
     @model_validator(mode="after")
@@ -32,6 +34,7 @@ class CompanyUpdate(BaseModel):
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
+    zakat_nisab_value: Optional[Decimal] = None  # قيمة النصاب — minimum Zakat threshold (company currency)
     password: Optional[str] = None  # Optional; if provided, update company_password_hash
 
     @model_validator(mode="after")
@@ -47,6 +50,7 @@ class CompanyResponse(BaseModel):
     legal_type: LegalType
     fiscal_year_start: date
     fiscal_year_end: date
+    zakat_nisab_value: Optional[Decimal] = None  # قيمة النصاب
 
     model_config = {"from_attributes": True}
 

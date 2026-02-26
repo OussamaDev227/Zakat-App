@@ -16,7 +16,8 @@
   
     "valuation_rules": {
       "cash": "nominal_value",
-      "inventory": "market_value",
+      "trading_goods": "market_value",
+      "production_inventory": "market_value",
       "receivables": "expected_collectible_value"
     },
   
@@ -33,15 +34,26 @@
         "reason_ar": "النقود مال نامٍ كامل تجب فيه الزكاة لكونه قابلًا للنماء"
       },
       {
-        "code": "INVENTORY",
-        "label": "Inventory and trade goods",
-        "label_ar": "المخزونات وعروض التجارة",
-        "examples": ["raw_materials_for_sale", "finished_goods", "goods_for_resale"],
+        "code": "TRADING_GOODS",
+        "label": "Trading goods (merchandise)",
+        "label_ar": "عروض التجارة / البضاعة المعدة للبيع",
+        "examples": ["goods_for_resale", "merchandise", "finished_goods_for_sale"],
         "zakatable": true,
         "included_in_base": true,
         "conditions": ["intended_for_sale"],
-        "reason": "Inventory is classified as trade goods (ʿUrūḍ al-Tijārah)",
-        "reason_ar": "تُعد المخزونات من عروض التجارة التي تجب فيها الزكاة"
+        "reason": "Goods held for resale are trade goods (ʿUrūḍ al-Tijārah) and are zakatable",
+        "reason_ar": "البضاعة المعدة للبيع من عروض التجارة التي تجب فيها الزكاة"
+      },
+      {
+        "code": "PRODUCTION_INVENTORY",
+        "label": "Production inventory",
+        "label_ar": "المخزون الإنتاجي",
+        "examples": ["raw_materials", "work_in_progress", "manufacturing_stock"],
+        "zakatable": false,
+        "included_in_base": false,
+        "conditions": [],
+        "reason": "Production inventory (raw materials, WIP) is classified per framework; not automatically zakatable as trade goods",
+        "reason_ar": "المخزون الإنتاجي (مواد أولية، تحت التصنيع) يُصنف حسب الإطار ولا يُعد عروض تجارة بالضرورة"
       },
       {
         "code": "RECEIVABLE",
@@ -165,12 +177,12 @@
   
       "intention_override": {
         "fixed_asset_for_trade": {
-          "override_to": "INVENTORY",
+          "override_to": "TRADING_GOODS",
           "reason": "Assets intended for sale follow trade goods ruling",
           "reason_ar": "إذا نُوي بيع الأصل الثابت يُعامل معاملة عروض التجارة"
         },
         "investment_for_trading": {
-          "override_to": "INVENTORY",
+          "override_to": "TRADING_GOODS",
           "reason": "Trading intention changes zakat classification",
           "reason_ar": "الاستثمار المعد للتجارة يُصنف ضمن الأصول الزكوية"
         }

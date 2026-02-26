@@ -8,11 +8,13 @@
 const ruleCodeToArabic = {
   // Asset codes
   'CASH': 'النقدية وما في حكمها',
-  'INVENTORY': 'المخزونات وعروض التجارة',
+  'TRADING_GOODS': 'عروض التجارة / البضاعة المعدة للبيع',
+  'PRODUCTION_INVENTORY': 'المخزون الإنتاجي',
   'RECEIVABLE': 'الذمم المدينة',
   'FIXED_ASSET': 'الأصول الثابتة العينية',
   'INTANGIBLE_ASSET': 'الأصول المعنوية',
   'LONG_TERM_INVESTMENT': 'الاستثمارات طويلة الأجل',
+  'INVENTORY': 'عروض التجارة / البضاعة المعدة للبيع',  // legacy
   
   // Liability codes
   'SHORT_TERM_LIABILITY': 'الخصوم قصيرة الأجل',

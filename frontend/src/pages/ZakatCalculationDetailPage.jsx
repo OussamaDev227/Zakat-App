@@ -114,7 +114,21 @@ export default function ZakatCalculationDetailPage() {
           <span className="text-3xl">✓</span>
           ملخص الحساب
         </h2>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {calculation.nisab_value != null && (
+            <div className="bg-white rounded-lg p-5 border-2 border-green-200 shadow-md">
+              <p className="text-sm text-gray-700 mb-2 font-semibold">قيمة النصاب</p>
+              <p className="font-bold text-gray-900">
+                {parseFloat(calculation.nisab_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} د.ج
+              </p>
+            </div>
+          )}
+          {calculation.items_excluded_hawl > 0 && (
+            <div className="bg-white rounded-lg p-5 border-2 border-amber-200 shadow-md">
+              <p className="text-sm text-gray-700 mb-2 font-semibold">بنود مستبعدة (لم يمر عليها الحول)</p>
+              <p className="font-bold text-amber-700">{calculation.items_excluded_hawl}</p>
+            </div>
+          )}
           <div className="bg-white rounded-lg p-5 border-2 border-green-200 shadow-md">
             <p className="text-sm text-gray-700 mb-2 font-semibold">التاريخ</p>
             <p className="font-bold text-gray-900">
@@ -146,6 +160,9 @@ export default function ZakatCalculationDetailPage() {
             <p className="text-3xl font-bold text-green-700">
               {parseFloat(calculation.zakat_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-xl">د.ج</span>
             </p>
+            {calculation.below_nisab && (
+              <p className="text-sm text-amber-700 font-medium mt-2">لا زكاة — دون النصاب</p>
+            )}
           </div>
         </div>
       </div>

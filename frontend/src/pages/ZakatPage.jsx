@@ -250,7 +250,9 @@ export default function ZakatPage() {
           asset_type: financialItem.asset_type || null,
           accounting_label: financialItem.accounting_label || null,
           liability_code: financialItem.liability_code || null,
+          equity_code: financialItem.equity_code || null,
           amount: amount,
+          acquisition_date: financialItem.acquisition_date || null,
           metadata: financialItem.metadata || {},
         },
         editingAmountItem.id
@@ -470,8 +472,10 @@ export default function ZakatPage() {
                           {parseFloat(item.original_amount || item.included_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">د.ج</span>
                         </td>
                         <td>
-                          <span className={`badge ${item.included ? 'badge-success' : 'badge-danger'}`}>
-                            {item.included ? 'نعم' : 'لا'}
+                          <span className={`badge ${
+                            item.included ? 'badge-success' : (item.hawl_passed === false ? 'badge-warning' : 'badge-danger')
+                          }`}>
+                            {item.included ? 'زكوي' : (item.hawl_passed === false ? 'لم يمر عليه الحول' : 'غير زكوي')}
                           </span>
                         </td>
                         <td className="text-sm font-semibold text-purple-700">
@@ -611,6 +615,22 @@ export default function ZakatPage() {
                     {totalDeductibleLiabilities.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
                   </p>
                 </div>
+                {calculation.nisab_value != null && (
+                  <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
+                    <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">قيمة النصاب</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-700">
+                      {parseFloat(calculation.nisab_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
+                    </p>
+                  </div>
+                )}
+                {calculation.items_excluded_hawl > 0 && (
+                  <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-amber-200 shadow-md">
+                    <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">بنود مستبعدة (لم يمر عليها الحول)</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-amber-700">
+                      {calculation.items_excluded_hawl}
+                    </p>
+                  </div>
+                )}
                 <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
                   <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">وعاء الزكاة</p>
                   <p className="text-2xl sm:text-3xl font-bold text-green-700">
@@ -622,6 +642,9 @@ export default function ZakatPage() {
                   <p className="text-2xl sm:text-3xl font-bold text-green-700">
                     {parseFloat(calculation.zakat_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
                   </p>
+                  {calculation.below_nisab && (
+                    <p className="text-sm text-amber-700 font-medium mt-2">لا زكاة — دون النصاب</p>
+                  )}
                 </div>
               </div>
             </div>

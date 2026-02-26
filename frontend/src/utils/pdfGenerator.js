@@ -181,7 +181,33 @@ export async function generateZakatReportPDF(calculation) {
       yPosition,
       { fontSize: 12, maxWidth: contentWidth }
     );
-    yPosition += statusHeight + 10;
+    yPosition += statusHeight + 5;
+
+    // Nisab value (if set)
+    if (calculation.nisab_value != null) {
+      const nisabText = `قيمة النصاب: ${formatCurrency(calculation.nisab_value)} د.ج`;
+      const nisabHeight = addText(
+        nisabText,
+        pageWidth - margin,
+        yPosition,
+        { fontSize: 12, maxWidth: contentWidth }
+      );
+      yPosition += nisabHeight + 5;
+    }
+
+    // Items excluded due to Hawl
+    if (calculation.items_excluded_hawl > 0) {
+      const hawlExcludedText = `بنود مستبعدة (لم يمر عليها الحول): ${calculation.items_excluded_hawl}`;
+      const hawlHeight = addText(
+        hawlExcludedText,
+        pageWidth - margin,
+        yPosition,
+        { fontSize: 12, maxWidth: contentWidth }
+      );
+      yPosition += hawlHeight + 5;
+    }
+
+    yPosition += 5;
 
     // Zakat Base (highlighted)
     doc.setFontSize(16);
@@ -200,7 +226,9 @@ export async function generateZakatReportPDF(calculation) {
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(34, 139, 34);
-    const zakatAmountText = `مبلغ الزكاة (2.5%): ${formatCurrency(calculation.zakat_amount)} د.ج`;
+    const zakatAmountText = calculation.below_nisab
+      ? `مبلغ الزكاة (2.5%): ${formatCurrency(calculation.zakat_amount)} د.ج — لا زكاة (دون النصاب)`
+      : `مبلغ الزكاة (2.5%): ${formatCurrency(calculation.zakat_amount)} د.ج`;
     const zakatAmountHeight = addText(
       zakatAmountText,
       pageWidth - margin,

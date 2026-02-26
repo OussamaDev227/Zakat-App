@@ -118,8 +118,10 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
         let initialCategoryCode = '';
         if (mapped.category === 'ASSET' && mapped.asset_type) {
           if (mapped.asset_type === 'CASH') initialCategoryCode = 'Cash';
-          else if (mapped.asset_type === 'INVENTORY') initialCategoryCode = 'Inventory';
+          else if (mapped.asset_type === 'TRADING_GOODS' || mapped.asset_type === 'INVENTORY') initialCategoryCode = 'Trading Goods';  // INVENTORY = legacy
+          else if (mapped.asset_type === 'PRODUCTION_INVENTORY') initialCategoryCode = 'Production Inventory';
           else if (mapped.asset_type === 'RECEIVABLE') initialCategoryCode = 'Receivable';
+          else if (mapped.asset_type === 'FIXED_ASSET') initialCategoryCode = 'Fixed Assets';
         } else if (mapped.category === 'LIABILITY' && mapped.liability_code) {
           if (mapped.liability_code === 'SHORT_TERM_LIABILITY') initialCategoryCode = 'Liability';
           else if (mapped.liability_code === 'LONG_TERM_LIABILITY') initialCategoryCode = 'Long-term Loan';
@@ -184,7 +186,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
         row_number: row.row_number, // Preserve for error reporting
         is_zakatable: zakatClassification.category === 'ASSET' && 
                      (zakatClassification.asset_type === 'CASH' || 
-                      zakatClassification.asset_type === 'INVENTORY' || 
+                      zakatClassification.asset_type === 'TRADING_GOODS' || 
                       zakatClassification.asset_type === 'RECEIVABLE'),
         // Include zakat classification for backend
         category: zakatClassification.category,

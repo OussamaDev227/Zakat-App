@@ -27,21 +27,28 @@ async def get_asset_types(
     if not rule_engine.rules:
         raise HTTPException(status_code=500, detail="Rules not loaded")
     
-    # Map AssetType enum to rules data
-    asset_type_mapping = {
-        AssetType.CASH: "CASH",
-        AssetType.INVENTORY: "INVENTORY",
-        AssetType.RECEIVABLE: "RECEIVABLE",
-        AssetType.FIXED_ASSET: "FIXED_ASSET",
-        AssetType.INTANGIBLE_ASSET: "INTANGIBLE_ASSET",
-        AssetType.LONG_TERM_INVESTMENT: "LONG_TERM_INVESTMENT",
-    }
-    
     # Build response from rules, ensuring all enum values are present
     asset_types = []
+    default_labels = {
+        AssetType.CASH: "النقدية وما في حكمها",
+        AssetType.TRADING_GOODS: "عروض التجارة / البضاعة المعدة للبيع",
+        AssetType.PRODUCTION_INVENTORY: "المخزون الإنتاجي",
+        AssetType.RECEIVABLE: "الذمم المدينة",
+        AssetType.FIXED_ASSET: "الأصول الثابتة العينية",
+        AssetType.INTANGIBLE_ASSET: "الأصول المعنوية",
+        AssetType.LONG_TERM_INVESTMENT: "الاستثمارات طويلة الأجل",
+    }
+    default_zakatable = {
+        AssetType.CASH: True,
+        AssetType.TRADING_GOODS: True,
+        AssetType.PRODUCTION_INVENTORY: False,
+        AssetType.RECEIVABLE: True,
+        AssetType.FIXED_ASSET: False,
+        AssetType.INTANGIBLE_ASSET: False,
+        AssetType.LONG_TERM_INVESTMENT: False,
+    }
     for asset_type_enum in AssetType:
         code = asset_type_enum.value
-        # Find corresponding rule
         asset_rule = rule_engine.assets_by_code.get(code)
         if asset_rule:
             asset_types.append(
@@ -52,29 +59,11 @@ async def get_asset_types(
                 )
             )
         else:
-            # If rule not found, still include with default values (should not happen)
-            # This ensures enum completeness
-            default_labels = {
-                AssetType.CASH: "النقدية وما في حكمها",
-                AssetType.INVENTORY: "المخزونات وعروض التجارة",
-                AssetType.RECEIVABLE: "الذمم المدينة",
-                AssetType.FIXED_ASSET: "الأصول الثابتة العينية",
-                AssetType.INTANGIBLE_ASSET: "الأصول المعنوية",
-                AssetType.LONG_TERM_INVESTMENT: "الاستثمارات طويلة الأجل",
-            }
-            default_zakatable = {
-                AssetType.CASH: True,
-                AssetType.INVENTORY: True,
-                AssetType.RECEIVABLE: True,
-                AssetType.FIXED_ASSET: False,
-                AssetType.INTANGIBLE_ASSET: False,
-                AssetType.LONG_TERM_INVESTMENT: False,
-            }
             asset_types.append(
                 AssetTypeLookup(
                     code=code,
-                    label_ar=default_labels[asset_type_enum],
-                    zakatable_default=default_zakatable[asset_type_enum],
+                    label_ar=default_labels.get(asset_type_enum, code),
+                    zakatable_default=default_zakatable.get(asset_type_enum, False),
                 )
             )
     

@@ -23,6 +23,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
     liability_code: item?.liability_code ?? '',
     equity_code: item?.equity_code ?? '',
     amount: item?.amount ?? '',
+    acquisition_date: item?.acquisition_date ?? '',
     metadata: item?.metadata || {},
   });
 
@@ -81,15 +82,21 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
     return null;
   }, [formData.amount]);
 
+  const acquisitionDateError = useMemo(() => {
+    if (!formData.acquisition_date) return 'تاريخ التملك مطلوب';
+    return null;
+  }, [formData.acquisition_date]);
+
   const isFormValid = useMemo(() => {
     const nameOk = (formData.name || '').trim().length > 0;
     const amountOk = !amountError;
+    const acquisitionOk = !acquisitionDateError;
     const categoryOk =
       (formData.category === 'ASSET' && formData.asset_type) ||
       (formData.category === 'LIABILITY' && formData.liability_code) ||
       (formData.category === 'EQUITY' && formData.equity_code);
-    return nameOk && amountOk && categoryOk;
-  }, [formData.name, formData.amount, formData.category, formData.asset_type, formData.liability_code, formData.equity_code, amountError]);
+    return nameOk && amountOk && categoryOk && acquisitionOk;
+  }, [formData.name, formData.amount, formData.category, formData.asset_type, formData.liability_code, formData.equity_code, formData.acquisition_date, amountError, acquisitionDateError]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -112,6 +119,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
       name: formData.name,
       category: formData.category,
       amount: parseFloat(formData.amount),
+      acquisition_date: formData.acquisition_date || null,
       metadata: formData.metadata,
     };
     if (formData.category === 'ASSET') {
@@ -283,6 +291,26 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             </p>
           </div>
         )}
+
+        <div>
+          <label className="block text-sm font-bold text-gray-900 mb-2">
+            Acquisition Date (تاريخ التملك) *
+          </label>
+          <input
+            type="date"
+            required
+            value={formData.acquisition_date}
+            onChange={(e) => setFormData({ ...formData, acquisition_date: e.target.value })}
+            className={`input-field ${acquisitionDateError ? 'border-red-500' : ''}`}
+            aria-invalid={!!acquisitionDateError}
+            aria-describedby={acquisitionDateError ? 'acquisition-date-error' : undefined}
+          />
+          {acquisitionDateError && (
+            <p id="acquisition-date-error" className="text-red-600 text-sm font-medium mt-1" role="alert">
+              {acquisitionDateError}
+            </p>
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
