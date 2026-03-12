@@ -28,7 +28,13 @@ export default function Layout({ children }) {
   const langDropdownRef = useRef(null);
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
-  const currentLangCode = i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en';
+  const currentLangCode = i18n.language?.startsWith('ar')
+    ? 'ar'
+    : i18n.language?.startsWith('fr')
+    ? 'fr'
+    : 'en';
+
+  const currentFlag = <FlagIcon langCode={currentLangCode} size={24} />;
 
   useEffect(() => {
     function handleClickOutside(e) {
