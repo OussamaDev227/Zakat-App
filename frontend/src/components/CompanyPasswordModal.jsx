@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import PasswordInput from './PasswordInput';
 
 export default function CompanyPasswordModal({
   companyName,
@@ -31,11 +32,9 @@ export default function CompanyPasswordModal({
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-bold text-gray-700 mb-2">{t('password_label')}</label>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-field w-full"
               placeholder={t('password_placeholder')}
               autoFocus
               required

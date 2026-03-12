@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import PasswordInput from '../components/PasswordInput';
 
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
@@ -128,17 +129,15 @@ export default function LoginPage() {
                     <label htmlFor="password" className="block text-sm font-bold text-gray-900">
                       {t('password')}
                     </label>
-                    <input
+                    <PasswordInput
                       id="password"
-                      type="password"
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
                         setError('');
                       }}
-                      className="input-field bg-blue-50/50 border-blue-100 focus:bg-white"
+                      className="bg-blue-50/50 border-blue-100 focus:bg-white"
                       placeholder={t('placeholder_password')}
-                      autoComplete="current-password"
                       disabled={isSubmitting}
                     />
                   </div>

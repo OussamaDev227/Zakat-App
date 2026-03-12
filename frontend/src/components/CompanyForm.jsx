@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import PasswordInput from './PasswordInput';
 import { useTranslation } from 'react-i18next';
 
 export default function CompanyForm({ company = null, onSubmit, onCancel }) {
@@ -138,11 +139,9 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
           <label className="block text-sm font-bold text-gray-900 mb-2">
             {t('company_password_optional')}
           </label>
-          <input
-            type="password"
+          <PasswordInput
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="input-field"
             placeholder={company ? t('password_placeholder_edit') : t('password_placeholder_new')}
           />
         </div>

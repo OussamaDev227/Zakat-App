@@ -4,7 +4,7 @@
  * Main app layout with RTL/LTR support, header, navigation, and language switcher
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
@@ -12,9 +12,9 @@ import { getPrimaryReference } from '../config/academicReferences';
 import { updateCompanyLanguage } from '../api/companies';
 
 const LANG_OPTIONS = [
-  { code: 'ar', label: 'العربية' },
-  { code: 'fr', label: 'Français' },
-  { code: 'en', label: 'English' },
+  { code: 'ar', flag: '🇸🇦', label: 'العربية' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
 ];
 
 export default function Layout({ children }) {
@@ -23,7 +23,20 @@ export default function Layout({ children }) {
   const { activeCompany, setActiveCompany } = useCompany();
   const primaryRef = getPrimaryReference();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const langDropdownRef = useRef(null);
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+
+  const currentLangCode = i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en';
+  const currentOption = LANG_OPTIONS.find((o) => o.code === currentLangCode) || LANG_OPTIONS[0];
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) setLangDropdownOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems = [
     { path: '/companies', labelKey: 'nav_companies' },
@@ -34,6 +47,7 @@ export default function Layout({ children }) {
   ];
 
   async function handleLanguageChange(lang) {
+    setLangDropdownOpen(false);
     i18n.changeLanguage(lang);
     if (activeCompany?.id) {
       try {
@@ -60,20 +74,37 @@ export default function Layout({ children }) {
 
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               {/* Language switcher */}
-              <div className="flex items-center gap-1 rounded-lg bg-white/10 border border-white/20 px-2 py-1">
-                <span className="text-white text-xs font-semibold whitespace-nowrap">{t('language')}:</span>
-                <select
-                  value={i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en'}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="bg-white/20 text-white border-0 rounded px-2 py-1 text-sm font-bold cursor-pointer focus:ring-2 focus:ring-white/50"
+              <div className="relative" ref={langDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setLangDropdownOpen((o) => !o)}
+                  className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-2 py-1.5 text-2xl min-w-[2.75rem] h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none"
                   aria-label={t('language')}
+                  title={`${t('language')}: ${currentOption.label}`}
                 >
-                  {LANG_OPTIONS.map((opt) => (
-                    <option key={opt.code} value={opt.code} className="text-gray-900">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  {currentOption.flag}
+                </button>
+                {langDropdownOpen && (
+                  <div
+                    className="absolute top-full mt-1 end-0 rounded-lg bg-white shadow-lg border border-gray-200 py-1 z-50 min-w-[3rem]"
+                    role="listbox"
+                    aria-label={t('language')}
+                  >
+                    {LANG_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        role="option"
+                        aria-selected={opt.code === currentLangCode}
+                        aria-label={opt.label}
+                        onClick={() => handleLanguageChange(opt.code)}
+                        className={`w-full px-3 py-2 text-xl text-center hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${opt.code === currentLangCode ? 'bg-blue-50' : ''}`}
+                      >
+                        {opt.flag}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {activeCompany && (
