@@ -13,9 +13,9 @@ import { updateCompanyLanguage } from '../api/companies';
 import FlagIcon from './FlagIcon';
 
 const LANG_OPTIONS = [
-  { code: 'ar' },
-  { code: 'fr' },
-  { code: 'en' },
+  { code: 'ar', labelKey: 'lang_ar_name' },
+  { code: 'fr', labelKey: 'lang_fr_name' },
+  { code: 'en', labelKey: 'lang_en_name' },
 ];
 
 export default function Layout({ children }) {
@@ -102,11 +102,14 @@ export default function Layout({ children }) {
                         type="button"
                         role="option"
                         aria-selected={opt.code === currentLangCode}
-                        aria-label={`${t('language')} ${opt.code === 'ar' ? 'العربية' : opt.code === 'fr' ? 'Français' : 'English'}`}
+                        aria-label={t(opt.labelKey)}
                         onClick={() => handleLanguageChange(opt.code)}
-                        className={`w-full px-3 py-2 flex items-center justify-center gap-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${opt.code === currentLangCode ? 'bg-blue-50' : ''}`}
+                        className={`w-full px-3 py-2 flex items-center justify-start gap-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${
+                          opt.code === currentLangCode ? 'bg-blue-50 font-semibold' : ''
+                        }`}
                       >
                         <FlagIcon langCode={opt.code} size={24} />
+                        <span className="text-sm">{t(opt.labelKey)}</span>
                       </button>
                     ))}
                   </div>
