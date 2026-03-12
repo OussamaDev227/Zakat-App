@@ -31,7 +31,6 @@ import {
 import { getFinancialItems } from '../api/financialItems';
 import CalculationStatusBadge from '../components/CalculationStatusBadge';
 import CompanySelector from '../components/CompanySelector';
-import { getRuleCodeArabic } from '../utils/ruleCodeTranslations';
 import { generateZakatReportPDF } from '../utils/pdfGenerator';
 
 export default function ZakatPage() {
@@ -516,7 +515,7 @@ export default function ZakatPage() {
                   <button
                     onClick={() => setShowItemSelector(false)}
                     className="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
-                    aria-label="إغلاق"
+                    aria-label={t('close')}
                   >
                     ✕
                   </button>
@@ -557,7 +556,7 @@ export default function ZakatPage() {
                       setNewAmount('');
                     }}
                     className="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
-                    aria-label="إغلاق"
+                    aria-label={t('close')}
                   >
                     ✕
                   </button>
@@ -655,24 +654,28 @@ export default function ZakatPage() {
           {/* SECTION 4: Applied Zakat Rules (Read-only) */}
           {calculation.rules_used && calculation.rules_used.length > 0 && (
             <div className="card border-2 border-purple-200">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 text-gray-900">القواعد المطبقة في هذا الحساب</h2>
+              <h2 className="text-lg sm:text-xl font-bold mb-4 text-gray-900">{t('applied_rules_section_title')}</h2>
               <div className="table-container">
                 <table>
                   <thead>
                     <tr>
-                      <th>رمز القاعدة</th>
-                      <th>عنوان القاعدة</th>
-                      <th>السبب</th>
+                      <th>{t('rule_code')}</th>
+                      <th>{t('rule_title')}</th>
+                      <th>{t('reason_from_rule')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {calculation.rules_used.map((rule, index) => (
-                      <tr key={rule.rule_code || index}>
-                        <td className="font-semibold text-purple-700">{getRuleCodeArabic(rule.rule_code)}</td>
-                        <td className="font-bold text-gray-900">{rule.label_ar}</td>
-                        <td className="text-sm font-medium text-gray-800">{rule.reason_ar}</td>
-                      </tr>
-                    ))}
+                    {calculation.rules_used.map((rule, index) => {
+                      const codeKey = `rule_${rule.rule_code}`;
+                      const codeLabel = t(codeKey) !== codeKey ? t(codeKey) : (rule.label_ar || rule.rule_code);
+                      return (
+                        <tr key={rule.rule_code || index}>
+                          <td className="font-semibold text-purple-700">{codeLabel}</td>
+                          <td className="font-bold text-gray-900">{rule.label_ar}</td>
+                          <td className="text-sm font-medium text-gray-800">{rule.reason_ar}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

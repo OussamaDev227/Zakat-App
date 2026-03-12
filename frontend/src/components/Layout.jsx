@@ -12,9 +12,9 @@ import { getPrimaryReference } from '../config/academicReferences';
 import { updateCompanyLanguage } from '../api/companies';
 
 const LANG_OPTIONS = [
-  { code: 'ar', flag: '🇸🇦', label: 'العربية' },
-  { code: 'fr', flag: '🇫🇷', label: 'Français' },
-  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'ar', flag: '🇸🇦' },
+  { code: 'fr', flag: '🇫🇷' },
+  { code: 'en', flag: '🇬🇧' },
 ];
 
 export default function Layout({ children }) {
@@ -28,7 +28,7 @@ export default function Layout({ children }) {
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
   const currentLangCode = i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en';
-  const currentOption = LANG_OPTIONS.find((o) => o.code === currentLangCode) || LANG_OPTIONS[0];
+  const currentFlag = LANG_OPTIONS.find((o) => o.code === currentLangCode)?.flag || LANG_OPTIONS[0].flag;
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -80,9 +80,9 @@ export default function Layout({ children }) {
                   onClick={() => setLangDropdownOpen((o) => !o)}
                   className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-2 py-1.5 text-2xl min-w-[2.75rem] h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none"
                   aria-label={t('language')}
-                  title={`${t('language')}: ${currentOption.label}`}
+                  title={t('language')}
                 >
-                  {currentOption.flag}
+                  {currentFlag}
                 </button>
                 {langDropdownOpen && (
                   <div
@@ -96,7 +96,7 @@ export default function Layout({ children }) {
                         type="button"
                         role="option"
                         aria-selected={opt.code === currentLangCode}
-                        aria-label={opt.label}
+                        aria-label={`${t('language')} ${opt.code === 'ar' ? 'العربية' : opt.code === 'fr' ? 'Français' : 'English'}`}
                         onClick={() => handleLanguageChange(opt.code)}
                         className={`w-full px-3 py-2 text-xl text-center hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${opt.code === currentLangCode ? 'bg-blue-50' : ''}`}
                       >

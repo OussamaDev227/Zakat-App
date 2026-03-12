@@ -4,14 +4,30 @@
  * Simple authentication page with static credentials for academic/demo use.
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 
+const LANG_OPTIONS = [
+  { code: 'ar', flag: '🇸🇦' },
+  { code: 'fr', flag: '🇫🇷' },
+  { code: 'en', flag: '🇬🇧' },
+];
+
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const langDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) setLangDropdownOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,6 +35,8 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  const currentLangCode = i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en';
+  const currentOption = LANG_OPTIONS.find((o) => o.code === currentLangCode) || LANG_OPTIONS[0];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -53,6 +71,41 @@ export default function LoginPage() {
         </div>
 
         <div className="relative grid md:grid-cols-2 bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-100 overflow-hidden">
+          {/* Language switcher - flag icons only */}
+          <div className="absolute top-4 end-4 z-10" ref={langDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setLangDropdownOpen((o) => !o)}
+              className="flex items-center justify-center rounded-lg bg-white/20 border border-white/30 px-2 py-1.5 text-2xl min-w-[2.75rem] h-9 hover:bg-white/30 focus:ring-2 focus:ring-white/50 focus:outline-none"
+              aria-label={t('language')}
+              title={t('language')}
+            >
+              {currentOption.flag}
+            </button>
+            {langDropdownOpen && (
+              <div
+                className="absolute top-full mt-1 end-0 rounded-lg bg-white shadow-lg border border-gray-200 py-1 z-50 min-w-[3rem]"
+                role="listbox"
+                aria-label={t('language')}
+              >
+                {LANG_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    role="option"
+                    aria-selected={opt.code === currentLangCode}
+                    onClick={() => {
+                      i18n.changeLanguage(opt.code);
+                      setLangDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-xl text-center hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${opt.code === currentLangCode ? 'bg-blue-50' : ''}`}
+                  >
+                    {opt.flag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="bg-gradient-to-b from-blue-900 via-blue-800 to-slate-900 text-white px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1 text-xs font-semibold tracking-wide">
