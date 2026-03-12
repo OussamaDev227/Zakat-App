@@ -9,7 +9,7 @@ import PasswordInput from './PasswordInput';
 import { useTranslation } from 'react-i18next';
 
 export default function CompanyForm({ company = null, onSubmit, onCancel }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: company?.name || '',
     legal_type: company?.legal_type || 'LLC',
@@ -95,6 +95,8 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
               className={`input-field ${fiscalYearError ? 'border-red-500' : ''}`}
               aria-invalid={!!fiscalYearError}
               aria-describedby={fiscalYearError ? 'fiscal-year-error' : undefined}
+              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+              lang={i18n.language}
             />
           </div>
 
@@ -110,6 +112,8 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
               className={`input-field ${fiscalYearError ? 'border-red-500' : ''}`}
               aria-invalid={!!fiscalYearError}
               aria-describedby={fiscalYearError ? 'fiscal-year-error' : undefined}
+              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+              lang={i18n.language}
             />
           </div>
         </div>

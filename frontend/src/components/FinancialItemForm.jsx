@@ -254,7 +254,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             </select>
             {formData.liability_code && (
               <p className="text-xs text-gray-700 mt-1 font-medium">
-                {liabilityOptions.find(l => l.code === formData.liability_code)?.reason_ar}
+                {(() => {
+                  const selected = liabilityOptions.find((l) => l.code === formData.liability_code);
+                  if (!selected) return '';
+                  const key = `rule_${selected.code}_reason`;
+                  const translated = t(key);
+                  return translated && translated !== key ? translated : selected.reason_ar;
+                })()}
               </p>
             )}
           </div>
@@ -281,7 +287,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             </select>
             {formData.equity_code && (
               <p className="text-xs text-gray-700 mt-1 font-medium" dir="rtl">
-                {equityOptions.find(e => e.code === formData.equity_code)?.reason_ar}
+                {(() => {
+                  const selected = equityOptions.find((e) => e.code === formData.equity_code);
+                  if (!selected) return '';
+                  const key = `rule_${selected.code}_reason`;
+                  const translated = t(key);
+                  return translated && translated !== key ? translated : selected.reason_ar;
+                })()}
               </p>
             )}
             <p className="text-xs text-gray-500 mt-1" dir="rtl">
