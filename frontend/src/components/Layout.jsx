@@ -35,6 +35,8 @@ export default function Layout({ children }) {
     : 'en';
 
   const currentFlag = <FlagIcon langCode={currentLangCode} size={24} />;
+  const currentLangLabelKey =
+    LANG_OPTIONS.find((opt) => opt.code === currentLangCode)?.labelKey || 'lang_en_name';
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -88,7 +90,12 @@ export default function Layout({ children }) {
                   aria-label={t('language')}
                   title={t('language')}
                 >
-                  {currentFlag}
+                  <span className="flex items-center gap-2">
+                    {currentFlag}
+                    <span className="hidden sm:inline text-xs sm:text-sm text-white font-semibold">
+                      {t(currentLangLabelKey)}
+                    </span>
+                  </span>
                 </button>
                 {langDropdownOpen && (
                   <div
