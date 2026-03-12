@@ -38,29 +38,44 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
     return ids;
   }, [items]);
 
-  // Helper: resolve type code to Arabic label only (never show English codes)
+  // Helper: resolve type code to localized label (uses i18n rule_* keys when available)
   const getTypeLabel = (item) => {
-    if (!rules) {
-      if (item.category === 'ASSET') return item.asset_type || item.accounting_label || '';
-      if (item.category === 'EQUITY') return item.equity_code || '';
-      return item.liability_code || '';
-    }
+    // Prefer i18n translations based on rule_* keys so labels follow UI language
+    let code = null;
     if (item.category === 'ASSET') {
-      const code = item.asset_type;
+      code = item.asset_type;
       if (!code) return item.accounting_label || '';
-      const asset = rules.assets?.find(a => a.code === code);
-      return asset?.label_ar ?? code;
-    }
-    if (item.category === 'EQUITY') {
-      const code = item.equity_code;
+    } else if (item.category === 'EQUITY') {
+      code = item.equity_code;
       if (!code) return '';
-      const eq = rules.equity?.find(e => e.code === code);
-      return eq?.label_ar ?? code;
+    } else {
+      code = item.liability_code;
+      if (!code) return '';
     }
-    const code = item.liability_code;
-    if (!code) return '';
-    const liability = rules.liabilities?.find(l => l.code === code);
-    return liability?.label_ar ?? code;
+
+    const i18nKey = `rule_${code}`;
+    const translated = t(i18nKey);
+    // If a translation exists (i18next returns the key unchanged when missing), use it
+    if (translated && translated !== i18nKey) {
+      return translated;
+    }
+
+    // Fallback to rules metadata (typically Arabic labels from backend)
+    if (rules) {
+      if (item.category === 'ASSET') {
+        const asset = rules.assets?.find((a) => a.code === code);
+        if (asset?.label_ar) return asset.label_ar;
+      } else if (item.category === 'EQUITY') {
+        const eq = rules.equity?.find((e) => e.code === code);
+        if (eq?.label_ar) return eq.label_ar;
+      } else {
+        const liability = rules.liabilities?.find((l) => l.code === code);
+        if (liability?.label_ar) return liability.label_ar;
+      }
+    }
+
+    // Last resort: show raw code
+    return code || '';
   };
   if (items.length === 0) {
     return (
