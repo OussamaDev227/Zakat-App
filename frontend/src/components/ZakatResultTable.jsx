@@ -61,7 +61,13 @@ export default function ZakatResultTable({ items }) {
                 </td>
                 {hasRuleCode && (
                   <td className="text-sm font-semibold text-purple-700">
-                    {getRuleCodeArabic(item.rule_code)}
+                    {(() => {
+                      const codeKey = `rule_${item.rule_code}`;
+                      const translated = t(codeKey);
+                      return translated && translated !== codeKey
+                        ? translated
+                        : getRuleCodeArabic(item.rule_code);
+                    })()}
                   </td>
                 )}
                 <td className="text-sm font-medium text-gray-800 max-w-md leading-relaxed">
