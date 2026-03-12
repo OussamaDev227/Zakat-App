@@ -31,6 +31,7 @@ import {
 import { getFinancialItems } from '../api/financialItems';
 import CalculationStatusBadge from '../components/CalculationStatusBadge';
 import CompanySelector from '../components/CompanySelector';
+import { getRuleCodeArabic } from '../utils/ruleCodeTranslations';
 import { generateZakatReportPDF } from '../utils/pdfGenerator';
 
 export default function ZakatPage() {
@@ -480,7 +481,7 @@ export default function ZakatPage() {
                           </span>
                         </td>
                         <td className="text-sm font-semibold text-purple-700">
-                          {getRuleCodeArabic(item.rule_code)}
+                          {t(`rule_${item.rule_code}`) !== `rule_${item.rule_code}` ? t(`rule_${item.rule_code}`) : getRuleCodeArabic(item.rule_code)}
                         </td>
                         {isDraft && (
                           <td>

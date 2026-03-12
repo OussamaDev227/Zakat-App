@@ -9,11 +9,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import PasswordInput from '../components/PasswordInput';
+import FlagIcon from '../components/FlagIcon';
 
 const LANG_OPTIONS = [
-  { code: 'ar', flag: '🇸🇦' },
-  { code: 'fr', flag: '🇫🇷' },
-  { code: 'en', flag: '🇬🇧' },
+  { code: 'ar' },
+  { code: 'fr' },
+  { code: 'en' },
 ];
 
 export default function LoginPage() {
@@ -36,7 +37,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   const currentLangCode = i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en';
-  const currentOption = LANG_OPTIONS.find((o) => o.code === currentLangCode) || LANG_OPTIONS[0];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -76,11 +76,11 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setLangDropdownOpen((o) => !o)}
-              className="flex items-center justify-center rounded-lg bg-white/20 border border-white/30 px-2 py-1.5 text-2xl min-w-[2.75rem] h-9 hover:bg-white/30 focus:ring-2 focus:ring-white/50 focus:outline-none"
+              className="flex items-center justify-center rounded-lg bg-white/20 border border-white/30 px-2 py-1.5 min-w-[2.75rem] h-9 hover:bg-white/30 focus:ring-2 focus:ring-white/50 focus:outline-none"
               aria-label={t('language')}
               title={t('language')}
             >
-              {currentOption.flag}
+              <FlagIcon langCode={currentLangCode} size={28} />
             </button>
             {langDropdownOpen && (
               <div
@@ -98,9 +98,9 @@ export default function LoginPage() {
                       i18n.changeLanguage(opt.code);
                       setLangDropdownOpen(false);
                     }}
-                    className={`w-full px-3 py-2 text-xl text-center hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${opt.code === currentLangCode ? 'bg-blue-50' : ''}`}
+                    className={`w-full px-3 py-2 flex items-center justify-center gap-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg ${opt.code === currentLangCode ? 'bg-blue-50' : ''}`}
                   >
-                    {opt.flag}
+                    <FlagIcon langCode={opt.code} size={24} />
                   </button>
                 ))}
               </div>
