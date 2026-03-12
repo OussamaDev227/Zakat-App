@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import LocalizedDateInput from './LocalizedDateInput';
 import { useRules } from '../contexts/RulesContext';
 import { getAssetTypes } from '../api/lookups';
 
@@ -306,20 +307,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
           <label className="block text-sm font-bold text-gray-900 mb-2">
             {t('acquisition_date_label')} *
           </label>
-          <input
-            type="date"
+          <LocalizedDateInput
+            id="acquisition_date"
             required
             value={formData.acquisition_date}
-            onChange={(e) => setFormData({ ...formData, acquisition_date: e.target.value })}
-            className={`input-field ${acquisitionDateError ? 'border-red-500' : ''}`}
-            aria-invalid={!!acquisitionDateError}
-            aria-describedby={acquisitionDateError ? 'acquisition-date-error' : undefined}
+            onChange={(val) => setFormData({ ...formData, acquisition_date: val })}
+            error={acquisitionDateError}
           />
-          {acquisitionDateError && (
-            <p id="acquisition-date-error" className="text-red-600 text-sm font-medium mt-1" role="alert">
-              {acquisitionDateError}
-            </p>
-          )}
         </div>
 
         <div>
