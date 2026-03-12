@@ -17,6 +17,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
 import {
   startCalculation,
@@ -34,6 +35,7 @@ import { getRuleCodeArabic } from '../utils/ruleCodeTranslations';
 import { generateZakatReportPDF } from '../utils/pdfGenerator';
 
 export default function ZakatPage() {
+  const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const [searchParams, setSearchParams] = useSearchParams();
   const [calculation, setCalculation] = useState(null);
@@ -135,11 +137,11 @@ export default function ZakatPage() {
   async function handleFinalize() {
     if (!calculation || !isDraft) return;
     if (calculation.items.length === 0) {
-      alert('لا يمكن إتمام الحساب بدون بنود مالية');
+      alert(t('cannot_finalize_no_items'));
       return;
     }
 
-    if (!confirm('هل أنت متأكد من إتمام هذا الحساب؟ لن يمكنك تعديله بعد الإتمام.')) {
+    if (!confirm(t('confirm_finalize'))) {
       return;
     }
 
@@ -148,7 +150,7 @@ export default function ZakatPage() {
       setError(null);
       const finalized = await finalizeCalculation(calculation.calculation_id);
       setCalculation(finalized);
-      alert('تم إتمام الحساب بنجاح');
+      alert(t('finalize_success'));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -165,7 +167,7 @@ export default function ZakatPage() {
       const newCalculation = await createRevision(calculation.calculation_id);
       setCalculation(newCalculation);
       setSearchParams({ calculation_id: newCalculation.calculation_id.toString() });
-      alert('تم إنشاء نسخة جديدة من الحساب');
+      alert(t('revision_created'));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -196,7 +198,7 @@ export default function ZakatPage() {
   async function handleRemoveItem(itemId) {
     if (!calculation || !isDraft) return;
 
-    if (!confirm('هل أنت متأكد من حذف هذا البند من الحساب؟')) {
+    if (!confirm(t('confirm_remove_item'))) {
       return;
     }
 
@@ -223,7 +225,7 @@ export default function ZakatPage() {
 
     const amount = parseFloat(newAmount);
     if (isNaN(amount) || amount < 0) {
-      alert('يرجى إدخال مبلغ صحيح');
+      alert(t('enter_valid_amount'));
       return;
     }
 
@@ -233,7 +235,7 @@ export default function ZakatPage() {
       // Find the item to get its details
       const item = calculation.items.find(i => i.item_id === editingAmountItem.id);
       if (!item) {
-        throw new Error('البند غير موجود');
+        throw new Error(t('item_not_found'));
       }
 
       // Fetch full financial item details to get asset_type/liability_code
@@ -274,7 +276,7 @@ export default function ZakatPage() {
       setGeneratingPDF(true);
       await generateZakatReportPDF(calculation);
     } catch (err) {
-      alert(`خطأ في إنشاء ملف PDF: ${err.message}`);
+      alert(`${t('pdf_error')}: ${err.message}`);
       console.error('PDF generation error:', err);
     } finally {
       setGeneratingPDF(false);
@@ -283,7 +285,7 @@ export default function ZakatPage() {
 
   // Format fiscal year
   function formatFiscalYear(start, end) {
-    if (!start || !end) return 'غير محدد';
+    if (!start || !end) return t('date_unspecified');
     const startYear = new Date(start).getFullYear();
     const endYear = new Date(end).getFullYear();
     return `${startYear} - ${endYear}`;
@@ -291,8 +293,8 @@ export default function ZakatPage() {
 
   // Format company type
   function formatCompanyType(type) {
-    if (!type) return 'غير محدد';
-    return type === 'LLC' ? 'شركة ذات مسؤولية محدودة' : 'مؤسسة فردية';
+    if (!type) return t('date_unspecified');
+    return type === 'LLC' ? t('legal_type_llc') : t('legal_type_sole');
   }
 
   // Calculate totals
@@ -308,12 +310,12 @@ export default function ZakatPage() {
     return (
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">حساب الزكاة</h1>
-          <p className="text-gray-600">إدارة حسابات الزكاة للشركة</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('zakat_calculation')}</h1>
+          <p className="text-gray-600">{t('zakat_management_intro')}</p>
         </div>
         <CompanySelector />
         <div className="card text-center py-8">
-          <p className="text-gray-700 font-medium">يرجى اختيار شركة لحساب الزكاة</p>
+          <p className="text-gray-700 font-medium">{t('select_company_for_zakat')}</p>
         </div>
       </div>
     );
@@ -322,15 +324,15 @@ export default function ZakatPage() {
   return (
     <div>
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">حساب الزكاة</h1>
-        <p className="text-sm sm:text-base text-gray-600">إدارة حسابات الزكاة للشركة بناءً على القواعد الشرعية المطبقة</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t('zakat_calculation')}</h1>
+        <p className="text-sm sm:text-base text-gray-600">{t('zakat_management_rules')}</p>
         <p className="mt-2 text-xs sm:text-sm text-gray-500">
-          لمزيد من التفاصيل حول الإطار التصوري والقواعد المحاسبية المستعملة في هذا الحساب، يمكنك مراجعة صفحة{' '}
+          {t('methodology_link_intro')}{' '}
           <Link
             to="/about-methodology#rules"
             className="text-blue-700 hover:text-blue-900 underline decoration-dotted"
           >
-            القواعد والمنهجية المعتمدة
+            {t('methodology_link')}
           </Link>
           .
         </p>
@@ -340,13 +342,13 @@ export default function ZakatPage() {
 
       {loading && !calculation && (
         <div className="card text-center py-8">
-          <p className="text-gray-700 font-medium">جاري التحميل...</p>
+          <p className="text-gray-700 font-medium">{t('loading')}</p>
         </div>
       )}
 
       {error && (
         <div className="card bg-red-50 border-2 border-red-300 shadow-lg mb-6">
-          <p className="text-red-900 font-bold text-lg">خطأ: {error}</p>
+          <p className="text-red-900 font-bold text-lg">{t('error')}: {error}</p>
         </div>
       )}
 
@@ -358,15 +360,15 @@ export default function ZakatPage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start gap-4">
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">اسم الشركة:</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">{t('company_name_label')}</h2>
                     <span className="text-blue-700 text-lg sm:text-xl break-words">{calculation.company_name || activeCompany.name}</span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <h2 className="text-base sm:text-lg font-bold text-gray-900">نوع الشركة:</h2>
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900">{t('company_type_label')}</h2>
                     <span className="text-gray-700">{formatCompanyType(calculation.company_type)}</span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <h2 className="text-base sm:text-lg font-bold text-gray-900">السنة المالية:</h2>
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900">{t('fiscal_year_label')}</h2>
                     <span className="text-gray-700">
                       {formatFiscalYear(calculation.fiscal_year_start, calculation.fiscal_year_end)}
                     </span>
@@ -384,14 +386,14 @@ export default function ZakatPage() {
                       disabled={loading || calculation.items.length === 0}
                       className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                     >
-                      إعادة الحساب
+                      {t('recalculate')}
                     </button>
                     <button
                       onClick={handleFinalize}
                       disabled={loading || calculation.items.length === 0}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                     >
-                      إتمام الحساب
+                      {t('finalize_calculation')}
                     </button>
                   </>
                 )}
@@ -401,7 +403,7 @@ export default function ZakatPage() {
                     disabled={loading}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                   >
-                    إنشاء نسخة جديدة
+                    {t('create_revision')}
                   </button>
                 )}
                 {false && (
@@ -411,7 +413,7 @@ export default function ZakatPage() {
                     className={`btn-secondary w-full sm:w-auto ${generatingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
                     title="تحميل تقرير PDF"
                   >
-                    {generatingPDF ? 'جاري الإنشاء...' : '📄 إنشاء تقرير PDF'}
+                    {generatingPDF ? t('generating_pdf') : `📄 ${t('generate_pdf')}`}
                   </button>
                 )}
               </div>
@@ -421,28 +423,28 @@ export default function ZakatPage() {
           {/* SECTION 2: Items Included in This Calculation */}
           <div className="card border-2 border-blue-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900">البنود المدرجة في هذا الحساب</h2>
-              {isDraft && (
-                <button
-                  onClick={() => setShowItemSelector(true)}
-                  className="btn-primary w-full sm:w-auto text-sm sm:text-base"
-                >
-                  ➕ إضافة بند مالي موجود
-                </button>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">{t('items_in_calculation')}</h2>
+            {isDraft && (
+              <button
+                onClick={() => setShowItemSelector(true)}
+                className="btn-primary w-full sm:w-auto text-sm sm:text-base"
+              >
+                ➕ {t('add_existing_item')}
+              </button>
               )}
             </div>
 
             {calculation.items.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-700 font-medium mb-4">
-                  لا توجد بنود مالية في هذا الحساب
+                  {t('no_items_in_calculation')}
                 </p>
                 {isDraft && (
                   <button
                     onClick={() => setShowItemSelector(true)}
                     className="btn-primary"
                   >
-                    ➕ إضافة بند مالي موجود
+                    ➕ {t('add_existing_item')}
                   </button>
                 )}
               </div>
@@ -451,12 +453,12 @@ export default function ZakatPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>اسم البند</th>
-                      <th>الفئة</th>
-                      <th>المبلغ</th>
-                      <th>زكوي؟</th>
-                      <th>رمز القاعدة</th>
-                      {isDraft && <th>الإجراءات</th>}
+                    <th>{t('item_name')}</th>
+                    <th>{t('table_category')}</th>
+                    <th>{t('table_amount')}</th>
+                    <th>{t('zakatable_col')}</th>
+                    <th>{t('rule_code')}</th>
+                    {isDraft && <th>{t('actions')}</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -465,17 +467,17 @@ export default function ZakatPage() {
                         <td className="font-bold text-gray-900">{item.item_name}</td>
                         <td>
                           <span className="badge">
-                            {item.category === 'ASSET' ? 'أصل' : 'التزام'}
+                            {item.category === 'ASSET' ? t('category_asset') : t('category_liability')}
                           </span>
                         </td>
                         <td className="font-semibold text-gray-800">
-                          {parseFloat(item.original_amount || item.included_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">د.ج</span>
+                          {parseFloat(item.original_amount || item.included_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">{t('currency')}</span>
                         </td>
                         <td>
                           <span className={`badge ${
                             item.included ? 'badge-success' : (item.hawl_passed === false ? 'badge-warning' : 'badge-danger')
                           }`}>
-                            {item.included ? 'زكوي' : (item.hawl_passed === false ? 'لم يمر عليه الحول' : 'غير زكوي')}
+                            {item.included ? t('zakatable') : (item.hawl_passed === false ? t('hawl_not_passed') : t('not_zakatable'))}
                           </span>
                         </td>
                         <td className="text-sm font-semibold text-purple-700">
@@ -488,13 +490,13 @@ export default function ZakatPage() {
                                 onClick={() => handleEditAmount(item.item_id, item.original_amount || item.included_amount)}
                                 className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                               >
-                                تعديل المبلغ
+                                {t('edit_amount')}
                               </button>
                               <button
                                 onClick={() => handleRemoveItem(item.item_id)}
                                 className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                               >
-                                حذف
+                                {t('delete')}
                               </button>
                             </div>
                           </td>
@@ -510,7 +512,7 @@ export default function ZakatPage() {
             {showItemSelector && (
               <div className="mt-4 p-3 sm:p-4 bg-gray-50 border-2 border-gray-300 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">اختر بند مالي لإضافته</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">{t('choose_item_to_add')}</h3>
                   <button
                     onClick={() => setShowItemSelector(false)}
                     className="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -520,7 +522,7 @@ export default function ZakatPage() {
                   </button>
                 </div>
                 {availableItems.length === 0 ? (
-                  <p className="text-gray-700 text-sm sm:text-base">لا توجد بنود مالية متاحة</p>
+                  <p className="text-gray-700 text-sm sm:text-base">{t('no_available_items')}</p>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {availableItems.map(item => (
@@ -528,14 +530,14 @@ export default function ZakatPage() {
                         <div className="flex-1 min-w-0">
                           <span className="font-bold text-gray-900 text-sm sm:text-base block break-words">{item.name}</span>
                           <span className="text-xs sm:text-sm text-gray-600">
-                            ({item.category === 'ASSET' ? 'أصل' : 'التزام'})
+                            ({item.category === 'ASSET' ? t('category_asset') : t('category_liability')})
                           </span>
                         </div>
                         <button
                           onClick={() => handleLinkItem(item.id)}
                           className="btn-secondary text-xs sm:text-sm w-full sm:w-auto min-h-[44px] sm:min-h-0"
                         >
-                          إضافة
+                          {t('add')}
                         </button>
                       </div>
                     ))}
@@ -548,7 +550,7 @@ export default function ZakatPage() {
             {editingAmountItem && (
               <div className="mt-4 p-3 sm:p-4 bg-gray-50 border-2 border-gray-300 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">تعديل المبلغ</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">{t('edit_amount')}</h3>
                   <button
                     onClick={() => {
                       setEditingAmountItem(null);
@@ -562,7 +564,7 @@ export default function ZakatPage() {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">المبلغ الجديد:</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">{t('new_amount_label')}</label>
                     <input
                       type="number"
                       value={newAmount}
@@ -578,7 +580,7 @@ export default function ZakatPage() {
                       className="btn-primary w-full sm:w-auto order-1 sm:order-1"
                       disabled={loading}
                     >
-                      حفظ
+                      {t('save')}
                     </button>
                     <button
                       onClick={() => {
@@ -587,7 +589,7 @@ export default function ZakatPage() {
                       }}
                       className="btn-secondary w-full sm:w-auto order-2 sm:order-2"
                     >
-                      إلغاء
+                      {t('cancel')}
                     </button>
                   </div>
                 </div>
@@ -600,50 +602,50 @@ export default function ZakatPage() {
             <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 shadow-xl">
               <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-green-900 flex items-center gap-2">
                 <span className="text-2xl sm:text-3xl">✓</span>
-                ملخص حساب الزكاة
+                {t('zakat_summary')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
-                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">إجمالي الأصول الزكوية</p>
+                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">{t('total_zakatable_assets')}</p>
                   <p className="text-2xl sm:text-3xl font-bold text-green-700">
-                    {totalZakatableAssets.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
+                    {totalZakatableAssets.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">{t('currency')}</span>
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
-                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">إجمالي الالتزامات القابلة للخصم</p>
+                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">{t('total_deductible_liabilities')}</p>
                   <p className="text-2xl sm:text-3xl font-bold text-green-700">
-                    {totalDeductibleLiabilities.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
+                    {totalDeductibleLiabilities.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">{t('currency')}</span>
                   </p>
                 </div>
                 {calculation.nisab_value != null && (
                   <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
-                    <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">قيمة النصاب</p>
+                    <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">{t('nisab_value')}</p>
                     <p className="text-2xl sm:text-3xl font-bold text-green-700">
-                      {parseFloat(calculation.nisab_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
+                      {parseFloat(calculation.nisab_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">{t('currency')}</span>
                     </p>
                   </div>
                 )}
                 {calculation.items_excluded_hawl > 0 && (
                   <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-amber-200 shadow-md">
-                    <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">بنود مستبعدة (لم يمر عليها الحول)</p>
+                    <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">{t('items_excluded_hawl')}</p>
                     <p className="text-2xl sm:text-3xl font-bold text-amber-700">
                       {calculation.items_excluded_hawl}
                     </p>
                   </div>
                 )}
                 <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
-                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">وعاء الزكاة</p>
+                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">{t('zakat_base')}</p>
                   <p className="text-2xl sm:text-3xl font-bold text-green-700">
-                    {parseFloat(calculation.zakat_base).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
+                    {parseFloat(calculation.zakat_base).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">{t('currency')}</span>
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-4 sm:p-5 border-2 border-green-200 shadow-md">
-                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">مبلغ الزكاة (2.5%)</p>
+                  <p className="text-xs sm:text-sm text-gray-700 mb-2 font-semibold">{t('zakat_amount_2_5')}</p>
                   <p className="text-2xl sm:text-3xl font-bold text-green-700">
-                    {parseFloat(calculation.zakat_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">د.ج</span>
+                    {parseFloat(calculation.zakat_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-lg sm:text-xl">{t('currency')}</span>
                   </p>
                   {calculation.below_nisab && (
-                    <p className="text-sm text-amber-700 font-medium mt-2">لا زكاة — دون النصاب</p>
+                    <p className="text-sm text-amber-700 font-medium mt-2">{t('below_nisab')}</p>
                   )}
                 </div>
               </div>

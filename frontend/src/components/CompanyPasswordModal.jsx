@@ -3,6 +3,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CompanyPasswordModal({
   companyName,
@@ -11,7 +12,9 @@ export default function CompanyPasswordModal({
   loading = false,
   error = null,
 }) {
+  const { t, i18n } = useTranslation();
   const [password, setPassword] = useState('');
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -19,21 +22,21 @@ export default function CompanyPasswordModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" dir="rtl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" dir={dir}>
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border-2 border-blue-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">كلمة مرور الشركة</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{t('company_password_title')}</h2>
         <p className="text-gray-600 mb-4">
-          أدخل كلمة مرور شركة <span className="font-bold text-blue-800">{companyName}</span> للدخول.
+          {t('enter_password_for_company', { name: companyName })}
         </p>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-bold text-gray-700 mb-2">كلمة المرور</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">{t('password_label')}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input-field w-full"
-              placeholder="كلمة المرور"
+              placeholder={t('password_placeholder')}
               autoFocus
               required
               disabled={loading}
@@ -49,14 +52,14 @@ export default function CompanyPasswordModal({
               className="px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
               disabled={loading}
             >
-              إلغاء
+              {t('cancel')}
             </button>
             <button
               type="submit"
               className="btn-primary px-4 py-2"
               disabled={loading || !password.trim()}
             >
-              {loading ? 'جاري التحقق...' : 'دخول'}
+              {loading ? t('verifying') : t('enter')}
             </button>
           </div>
         </form>

@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import List, Optional
 from pydantic import BaseModel, model_validator
 
-from app.models.company import LegalType
+from app.models.company import LegalType, Language
 
 
 def _validate_fiscal_year_range(fiscal_year_start: date, fiscal_year_end: date) -> None:
@@ -21,6 +21,7 @@ class CompanyCreate(BaseModel):
     fiscal_year_end: date
     zakat_nisab_value: Optional[Decimal] = None  # قيمة النصاب — minimum Zakat threshold (company currency)
     password: Optional[str] = None  # Optional; if provided, stored hashed as company_password_hash
+    language: Optional[str] = None  # ar, fr, en; default ar
 
     @model_validator(mode="after")
     def fiscal_year_start_before_end(self):
@@ -36,6 +37,7 @@ class CompanyUpdate(BaseModel):
     fiscal_year_end: date
     zakat_nisab_value: Optional[Decimal] = None  # قيمة النصاب — minimum Zakat threshold (company currency)
     password: Optional[str] = None  # Optional; if provided, update company_password_hash
+    language: Optional[str] = None  # ar, fr, en
 
     @model_validator(mode="after")
     def fiscal_year_start_before_end(self):
@@ -51,8 +53,14 @@ class CompanyResponse(BaseModel):
     fiscal_year_start: date
     fiscal_year_end: date
     zakat_nisab_value: Optional[Decimal] = None  # قيمة النصاب
+    language: Optional[str] = None  # UI language: ar, fr, en; default ar in DB
 
     model_config = {"from_attributes": True}
+
+
+class CompanyLanguageUpdate(BaseModel):
+    """Schema for updating only company UI language."""
+    language: str  # ar, fr, en
 
 
 class CompanyMinimalResponse(BaseModel):

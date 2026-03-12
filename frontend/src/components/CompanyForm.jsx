@@ -5,8 +5,10 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CompanyForm({ company = null, onSubmit, onCancel }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: company?.name || '',
     legal_type: company?.legal_type || 'LLC',
@@ -21,11 +23,9 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
     const start = new Date(formData.fiscal_year_start);
     const end = new Date(formData.fiscal_year_end);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
-    if (start >= end) {
-      return 'بداية السنة المالية يجب أن تكون قبل نهايتها';
-    }
+    if (start >= end) return t('fiscal_year_error');
     return null;
-  }, [formData.fiscal_year_start, formData.fiscal_year_end]);
+  }, [formData.fiscal_year_start, formData.fiscal_year_end, t]);
 
   const isFormValid = useMemo(() => {
     const nameOk = (formData.name || '').trim().length > 0;
@@ -48,13 +48,13 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="card w-full max-w-2xl border-2 border-blue-200 shadow-xl">
       <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900">
-        {company ? 'تعديل الشركة' : 'إضافة شركة جديدة'}
+        {company ? t('edit_company') : t('add_company_new')}
       </h2>
 
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            اسم الشركة *
+            {t('company_name')} *
           </label>
           <input
             type="text"
@@ -62,13 +62,13 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="input-field"
-            placeholder="أدخل اسم الشركة"
+            placeholder={t('company_name_placeholder')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            نوع الشركة *
+            {t('company_type')} *
           </label>
           <select
             required
@@ -76,15 +76,15 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             onChange={(e) => setFormData({ ...formData, legal_type: e.target.value })}
             className="input-field"
           >
-            <option value="LLC">شركة ذات مسؤولية محدودة (LLC)</option>
-            <option value="SOLE_PROPRIETORSHIP">مؤسسة فردية (Sole Proprietorship)</option>
+            <option value="LLC">{t('legal_type_llc_option')}</option>
+            <option value="SOLE_PROPRIETORSHIP">{t('legal_type_sole_option')}</option>
           </select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
-              بداية السنة المالية *
+              {t('financial_year_start')} *
             </label>
             <input
               type="date"
@@ -99,7 +99,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
 
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
-              نهاية السنة المالية *
+              {t('financial_year_end')} *
             </label>
             <input
               type="date"
@@ -120,7 +120,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            Nisab Value (قيمة النصاب)
+            {t('nisab_value')}
           </label>
           <input
             type="number"
@@ -129,36 +129,34 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             value={formData.zakat_nisab_value}
             onChange={(e) => setFormData({ ...formData, zakat_nisab_value: e.target.value })}
             className="input-field"
-            placeholder="الحد الأدنى للزكاة"
+            placeholder={t('nisab_placeholder')}
           />
-          <p className="text-xs text-gray-600 mt-1">
-            Minimum Zakat threshold equivalent to 85g gold value (company currency).
-          </p>
+          <p className="text-xs text-gray-600 mt-1">{t('nisab_help')}</p>
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            كلمة مرور الشركة (اختياري)
+            {t('company_password_optional')}
           </label>
           <input
             type="password"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="input-field"
-            placeholder={company ? 'اتركه فارغاً للإبقاء على كلمة المرور الحالية' : 'للدخول إلى هذه الشركة لاحقاً'}
+            placeholder={company ? t('password_placeholder_edit') : t('password_placeholder_new')}
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
           <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
-            إلغاء
+            {t('cancel')}
           </button>
           <button
             type="submit"
             className="btn-primary w-full sm:w-auto order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!isFormValid}
           >
-            {company ? 'حفظ التعديلات' : 'إضافة'}
+            {company ? t('save_edits') : t('add')}
           </button>
         </div>
       </div>

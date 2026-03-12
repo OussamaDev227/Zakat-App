@@ -7,13 +7,13 @@
     @apply font-arabic bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 antialiased text-base;
   }
   
-  /* RTL-specific adjustments */
+  /* RTL/LTR: use logical alignment so direction follows lang */
   input[type="text"],
   input[type="number"],
   input[type="date"],
   select,
   textarea {
-    @apply text-right;
+    @apply text-start;
   }
   
   /* Better text contrast */
@@ -73,13 +73,13 @@
   }
   
   th {
-    @apply bg-gradient-to-r from-gray-50 to-gray-100 px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-right 
+    @apply bg-gradient-to-r from-gray-50 to-gray-100 px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-start
            font-bold text-gray-900 border-b-2 border-gray-200 
            uppercase text-xs sm:text-sm tracking-wider;
   }
   
   td {
-    @apply px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-100 text-gray-800 font-medium text-sm sm:text-base;
+    @apply px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-100 text-gray-800 font-medium text-sm sm:text-base text-start;
   }
   
   tr:hover {
@@ -105,4 +105,23 @@
   .badge-warning {
     @apply bg-amber-100 text-amber-800 border border-amber-300;
   }
+}
+
+/* RTL/LTR layout mirroring */
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+/* Mobile nav active indicator */
+[dir="rtl"] .nav-item-active {
+  border-right-width: 4px;
+  border-right-color: rgb(29 78 216);
+}
+[dir="ltr"] .nav-item-active {
+  border-left-width: 4px;
+  border-left-color: rgb(29 78 216);
 }

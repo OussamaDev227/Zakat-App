@@ -1,25 +1,26 @@
 /**
  * Rule Badge Component
- * 
+ *
  * Displays rule-driven status badges
- * Used to show zakatable/non-zakatable status based on backend decisions
  */
 
+import { useTranslation } from 'react-i18next';
+
 export default function RuleBadge({ included, zakatable }) {
+  const { t } = useTranslation();
+
   if (included !== undefined) {
-    // From calculation result
     return (
       <span className={`badge ${included ? 'badge-success' : 'badge-danger'}`}>
-        {included ? 'زكوي' : 'غير زكوي'}
+        {included ? t('zakatable') : t('not_zakatable')}
       </span>
     );
   }
 
   if (zakatable !== undefined) {
-    // From rule metadata
     return (
       <span className={`badge ${zakatable ? 'badge-info' : 'badge-danger'}`}>
-        {zakatable ? 'قابل للزكاة' : 'غير قابل للزكاة'}
+        {zakatable ? t('zakatable_eligible') : t('not_zakatable_eligible')}
       </span>
     );
   }

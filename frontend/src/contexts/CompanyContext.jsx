@@ -5,11 +5,26 @@
  * - selectCompany(companyId, password): verify password, store token, set active company
  * - clearCompanySession(): clear token and active company (logout from company / before switch)
  * - activeCompany: current company when session exists; null otherwise
+ * - When activeCompany is set, applies company.language (i18n + RTL/LTR).
  */
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCompanyToken, clearCompanyToken } from '../api/authStore';
 import * as authApi from '../api/auth';
+import i18n from '../i18n';
+
+const SUPPORTED_LANGS = ['ar', 'fr', 'en'];
+
+function applyLanguage(lang) {
+  const l = SUPPORTED_LANGS.includes(lang) ? lang : 'ar';
+  const dir = l === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = l;
+  document.documentElement.dir = dir;
+  try {
+    localStorage.setItem('lang', l);
+  } catch (_) {}
+  i18n.changeLanguage(l);
+}
 
 const CompanyContext = createContext(null);
 
@@ -25,6 +40,9 @@ export function CompanyProvider({ children }) {
   const selectCompany = useCallback(async (companyId, password) => {
     const data = await authApi.selectCompany(companyId, password);
     setActiveCompany(data.company);
+    if (data.company?.language) {
+      applyLanguage(data.company.language);
+    }
     return data;
   }, []);
 
@@ -37,6 +55,9 @@ export function CompanyProvider({ children }) {
     authApi.getCurrentCompany()
       .then((company) => {
         setActiveCompany(company);
+        if (company?.language) {
+          applyLanguage(company.language);
+        }
       })
       .catch(() => {
         clearCompanyToken();

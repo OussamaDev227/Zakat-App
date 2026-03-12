@@ -8,10 +8,12 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRules } from '../contexts/RulesContext';
 import { getAssetTypes } from '../api/lookups';
 
 export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
+  const { t } = useTranslation();
   const { rules } = useRules();
   const [assetTypes, setAssetTypes] = useState([]);
   const [loadingAssetTypes, setLoadingAssetTypes] = useState(true);
@@ -75,17 +77,17 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
 
   const amountError = useMemo(() => {
     const val = formData.amount;
-    if (val === '' || val == null) return 'المبلغ مطلوب';
+    if (val === '' || val == null) return t('validation_amount_required');
     const num = parseFloat(val);
-    if (Number.isNaN(num)) return 'المبلغ يجب أن يكون رقماً';
-    if (num < 0) return 'المبلغ لا يمكن أن يكون سالباً';
+    if (Number.isNaN(num)) return t('validation_amount_number');
+    if (num < 0) return t('validation_amount_negative');
     return null;
-  }, [formData.amount]);
+  }, [formData.amount, t]);
 
   const acquisitionDateError = useMemo(() => {
-    if (!formData.acquisition_date) return 'تاريخ التملك مطلوب';
+    if (!formData.acquisition_date) return t('validation_acquisition_date_required');
     return null;
-  }, [formData.acquisition_date]);
+  }, [formData.acquisition_date, t]);
 
   const isFormValid = useMemo(() => {
     const nameOk = (formData.name || '').trim().length > 0;
@@ -102,15 +104,15 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
     e.preventDefault();
 
     if (formData.category === 'ASSET' && !formData.asset_type) {
-      alert('يجب اختيار نوع الأصل');
+      alert(t('validation_asset_type_required'));
       return;
     }
     if (formData.category === 'LIABILITY' && !formData.liability_code) {
-      alert('يجب اختيار نوع الالتزام');
+      alert(t('validation_liability_type_required'));
       return;
     }
     if (formData.category === 'EQUITY' && !formData.equity_code) {
-      alert('يجب اختيار نوع حقوق الملكية');
+      alert(t('validation_equity_type_required'));
       return;
     }
     if (amountError || !isFormValid) return;
@@ -134,7 +136,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
   };
 
   if (!rules) {
-    return <div className="text-gray-700 font-medium">جاري تحميل القواعد...</div>;
+    return <div className="text-gray-700 font-medium">{t('loading_rules')}</div>;
   }
 
   const assetOptions = rules.assets || [];
@@ -144,13 +146,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="card w-full max-w-2xl border-2 border-blue-200 shadow-xl">
       <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900">
-        {item ? 'تعديل البند المالي' : 'إضافة بند مالي جديد'}
+        {item ? t('edit_financial_item') : t('add_financial_item_new')}
       </h2>
 
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            اسم البند *
+            {t('item_name')} *
           </label>
           <input
             type="text"
@@ -158,13 +160,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="input-field"
-            placeholder="مثال: النقدية في البنك"
+            placeholder={t('item_name_placeholder')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            الفئة *
+            {t('table_category')} *
           </label>
           <select
             required
@@ -173,9 +175,9 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             className="input-field"
             dir="rtl"
           >
-            <option value="ASSET">أصل</option>
-            <option value="LIABILITY">التزام</option>
-            <option value="EQUITY">حقوق الملكية</option>
+            <option value="ASSET">{t('category_asset')}</option>
+            <option value="LIABILITY">{t('category_liability')}</option>
+            <option value="EQUITY">{t('category_equity')}</option>
           </select>
         </div>
 
@@ -183,10 +185,10 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
           <>
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">
-                نوع الأصل *
+                {t('asset_type_label')} *
               </label>
               {loadingAssetTypes ? (
-                <div className="text-gray-700 font-medium">جاري تحميل أنواع الأصول...</div>
+                <div className="text-gray-700 font-medium">{t('loading_asset_types')}</div>
               ) : (
                 <>
                   <select
@@ -196,7 +198,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
                     className="input-field"
                     dir="rtl"
                   >
-                    <option value="">-- اختر نوع الأصل --</option>
+                    <option value="">-- {t('choose_asset_type')} --</option>
                     {assetTypes.map((assetType) => (
                       <option key={assetType.code} value={assetType.code}>
                         {assetType.label_ar}
@@ -206,11 +208,9 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
                   {formData.asset_type && (
                     <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-700" dir="rtl">
                       <p className="font-medium">
-                        حالة الزكاة: {formData.metadata?.zakatable ? 'خاضع للزكاة' : 'غير خاضع للزكاة'}
+                        {t('zakat_status_label')} {formData.metadata?.zakatable ? t('zakatable_eligible') : t('not_zakatable_eligible')}
                       </p>
-                      <p className="text-gray-600 mt-1">
-                        (يتم تحديده تلقائياً حسب نوع الأصل - غير قابل للتعديل)
-                      </p>
+                      <p className="text-gray-600 mt-1">{t('auto_determined_by_type')}</p>
                     </div>
                   )}
                 </>
@@ -218,19 +218,17 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">
-                الوصف المحاسبي
+                {t('accounting_label')}
               </label>
               <input
                 type="text"
                 value={formData.accounting_label || ''}
                 onChange={(e) => setFormData({ ...formData, accounting_label: e.target.value })}
                 className="input-field"
-                placeholder="مثال: حسابات الغير المدينة"
+                placeholder=""
                 dir="rtl"
               />
-              <p className="text-xs text-gray-600 mt-1">
-                (اختياري - للوصف المحاسبي فقط)
-              </p>
+              <p className="text-xs text-gray-600 mt-1">{t('accounting_label_optional')}</p>
             </div>
           </>
         )}
@@ -238,7 +236,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
         {formData.category === 'LIABILITY' && (
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
-              نوع الالتزام *
+              {t('liability_type_label')} *
             </label>
             <select
               required
@@ -247,7 +245,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
               className="input-field"
               dir="rtl"
             >
-              <option value="">-- اختر نوع الالتزام --</option>
+              <option value="">-- {t('choose_liability_type')} --</option>
               {liabilityOptions.map((liab) => (
                 <option key={liab.code} value={liab.code}>
                   {liab.label_ar}
@@ -265,7 +263,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
         {formData.category === 'EQUITY' && (
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
-              نوع حقوق الملكية *
+              {t('equity_type_label')} *
             </label>
             <select
               required
@@ -274,7 +272,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
               className="input-field"
               dir="rtl"
             >
-              <option value="">-- اختر نوع حقوق الملكية --</option>
+              <option value="">-- {t('choose_equity_type')} --</option>
               {equityOptions.map((eq) => (
                 <option key={eq.code} value={eq.code}>
                   {eq.label_ar}
@@ -287,14 +285,14 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
               </p>
             )}
             <p className="text-xs text-gray-500 mt-1" dir="rtl">
-              حقوق الملكية لا تدخل في وعاء الزكاة؛ للتوازن المحاسبي فقط.
+              {t('equity_note')}
             </p>
           </div>
         )}
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            Acquisition Date (تاريخ التملك) *
+            {t('acquisition_date_label')} *
           </label>
           <input
             type="date"
@@ -314,7 +312,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            المبلغ *
+            {t('amount')} *
           </label>
           <input
             type="number"
@@ -337,14 +335,14 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
           <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
-            إلغاء
+            {t('cancel')}
           </button>
           <button
             type="submit"
             className="btn-primary w-full sm:w-auto order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!isFormValid}
           >
-            {item ? 'حفظ التعديلات' : 'إضافة'}
+            {item ? t('save_edits') : t('add')}
           </button>
         </div>
       </div>

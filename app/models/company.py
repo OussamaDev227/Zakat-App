@@ -13,6 +13,13 @@ class LegalType(str, enum.Enum):
     SOLE_PROPRIETORSHIP = "SOLE_PROPRIETORSHIP"
 
 
+class Language(str, enum.Enum):
+    """UI language preference per company."""
+    ar = "ar"
+    fr = "fr"
+    en = "en"
+
+
 class Company(Base):
     """Company model."""
     __tablename__ = "companies"
@@ -24,6 +31,7 @@ class Company(Base):
     fiscal_year_end = Column(Date, nullable=False)
     company_password_hash = Column(String, nullable=True)  # bcrypt hash; required for company login
     zakat_nisab_value = Column(Numeric(18, 2), nullable=True)  # Minimum Zakat threshold (قيمة النصاب), company currency
+    language = Column(String(10), nullable=False, default="ar", server_default="ar")  # UI language: ar, fr, en
 
     # Relationships
     financial_items = relationship("FinancialItem", back_populates="company", cascade="all, delete-orphan")

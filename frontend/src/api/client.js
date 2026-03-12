@@ -129,6 +129,16 @@ export async function put(url, data) {
 }
 
 /**
+ * PATCH request
+ */
+export async function patch(url, data) {
+  return fetchJson(url, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
  * DELETE request
  */
 export async function del(url) {

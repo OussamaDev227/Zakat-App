@@ -11,6 +11,7 @@ from app.schemas.company import (
     CompanyListResponse,
     CompanyMinimalResponse,
     CompanyMinimalListResponse,
+    CompanyLanguageUpdate,
 )
 from app.models.company import Company
 from app.core.security import get_current_company_id, hash_company_password
@@ -30,9 +31,12 @@ async def create_company(
     """
     data = company_data.model_dump()
     password = data.pop("password", None)
+    language = data.pop("language", None)
     company = Company(**data)
     if password:
         company.company_password_hash = hash_company_password(password)
+    if language and language in ("ar", "fr", "en"):
+        company.language = language
     db.add(company)
     db.commit()
     db.refresh(company)
@@ -89,6 +93,27 @@ async def get_company(
     return CompanyResponse.model_validate(company)
 
 
+@router.patch("/{company_id}/language", response_model=CompanyResponse)
+async def update_company_language(
+    company_id: int,
+    body: CompanyLanguageUpdate,
+    db: Session = Depends(get_db),
+    session_company_id: int = Depends(get_current_company_id),
+):
+    """Update only the company UI language. Allowed for the company in the current session."""
+    if company_id != session_company_id:
+        raise HTTPException(status_code=403, detail="Access denied to this company")
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    if body.language not in ("ar", "fr", "en"):
+        raise HTTPException(status_code=400, detail="language must be one of: ar, fr, en")
+    company.language = body.language
+    db.commit()
+    db.refresh(company)
+    return CompanyResponse.model_validate(company)
+
+
 @router.put("/{company_id}", response_model=CompanyResponse)
 async def update_company(
     company_id: int,
@@ -102,7 +127,7 @@ async def update_company(
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    data = company_data.model_dump()
+    data = company_data.model_dump(exclude_unset=True)
     password = data.pop("password", None)
     for field, value in data.items():
         setattr(company, field, value)

@@ -1,15 +1,17 @@
 /**
  * Zakat History Page
- * 
+ *
  * List all zakat calculations for the active company (drafts + finalized)
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
 import { getCalculationsForCompany } from '../api/zakat';
 import HistoryList from '../components/HistoryList';
 
 export default function ZakatHistoryPage() {
+  const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const [calculations, setCalculations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function ZakatHistoryPage() {
       setCalculations(data);
     } catch (error) {
       console.error('Failed to load history:', error);
-      alert('فشل تحميل السجل: ' + error.message);
+      alert(t('load_history_failed') + ': ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -49,11 +51,10 @@ export default function ZakatHistoryPage() {
   return (
     <div>
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">سجل حسابات الزكاة</h1>
-        <p className="text-sm sm:text-base text-gray-600">عرض جميع حسابات الزكاة للشركة النشطة (مسودات ونهائية)</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t('zakat_history_title')}</h1>
+        <p className="text-sm sm:text-base text-gray-600">{t('history_intro')}</p>
       </div>
 
-      {/* Filter Buttons */}
       <div className="mb-6 flex flex-wrap gap-2 sm:gap-3">
         <button
           onClick={() => setFilter('ALL')}
@@ -63,7 +64,7 @@ export default function ZakatHistoryPage() {
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          الكل
+          {t('filter_all')}
         </button>
         <button
           onClick={() => setFilter('DRAFT')}
@@ -73,7 +74,7 @@ export default function ZakatHistoryPage() {
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          المسودات
+          {t('filter_drafts')}
         </button>
         <button
           onClick={() => setFilter('FINALIZED')}
@@ -83,15 +84,15 @@ export default function ZakatHistoryPage() {
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          النهائية
+          {t('filter_finalized')}
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-gray-700 font-medium">جاري التحميل...</div>
+        <div className="text-center py-8 text-gray-700 font-medium">{t('loading')}</div>
       ) : calculations.length === 0 ? (
         <div className="card text-center py-8">
-          <p className="text-gray-700 font-medium">لا توجد حسابات</p>
+          <p className="text-gray-700 font-medium">{t('no_calculations')}</p>
         </div>
       ) : (
         <HistoryList calculations={filteredCalculations} />

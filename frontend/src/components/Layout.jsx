@@ -1,60 +1,101 @@
 /**
  * Layout Component
  * 
- * Main app layout with RTL support, header, and navigation
+ * Main app layout with RTL/LTR support, header, navigation, and language switcher
  */
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
 import { getPrimaryReference } from '../config/academicReferences';
+import { updateCompanyLanguage } from '../api/companies';
+
+const LANG_OPTIONS = [
+  { code: 'ar', label: 'العربية' },
+  { code: 'fr', label: 'Français' },
+  { code: 'en', label: 'English' },
+];
 
 export default function Layout({ children }) {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
-  const { activeCompany } = useCompany();
+  const { activeCompany, setActiveCompany } = useCompany();
   const primaryRef = getPrimaryReference();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
   const navItems = [
-    { path: '/companies', label: 'الشركات', labelEn: 'Companies' },
-    { path: '/financial-items', label: 'البنود المالية', labelEn: 'Financial Items' },
-    { path: '/zakat', label: 'حساب الزكاة', labelEn: 'Zakat Calculation' },
-    { path: '/history', label: 'سجل الحسابات', labelEn: 'History' },
-    { path: '/about-methodology', label: 'المرجعية والمنهجية', labelEn: 'Methodology' },
+    { path: '/companies', labelKey: 'nav_companies' },
+    { path: '/financial-items', labelKey: 'nav_financial_items' },
+    { path: '/zakat', labelKey: 'nav_zakat' },
+    { path: '/history', labelKey: 'nav_history' },
+    { path: '/about-methodology', labelKey: 'nav_methodology' },
   ];
 
+  async function handleLanguageChange(lang) {
+    i18n.changeLanguage(lang);
+    if (activeCompany?.id) {
+      try {
+        await updateCompanyLanguage(activeCompany.id, lang);
+        setActiveCompany({ ...activeCompany, language: lang });
+      } catch (err) {
+        console.error('Failed to persist company language:', err);
+      }
+    }
+  }
+
   return (
-    <div className="min-h-screen" dir="rtl">
+    <div className="min-h-screen" dir={dir}>
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-700 to-blue-800 shadow-xl border-b-4 border-blue-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-between items-center min-h-[5rem] py-3 gap-3">
             <div className="flex items-center flex-wrap gap-2 sm:gap-4 md:gap-8">
               <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-md">
-                نظام دعم القرار لحساب زكاة الشركات
+                {t('app_title')}
               </h1>
-              <p className="hidden sm:block text-xs sm:text-sm text-blue-100 font-semibold">Decision Support System for Corporate Zakat</p>
+              <p className="hidden sm:block text-xs sm:text-sm text-blue-100 font-semibold">{t('app_subtitle')}</p>
             </div>
-            
-            {activeCompany && (
-              <div className="flex items-center gap-2 sm:gap-4">
-                <div className="bg-white/20 backdrop-blur-sm px-3 sm:px-5 py-2 sm:py-3 rounded-xl border-2 border-white/30 shadow-lg max-w-full sm:max-w-none">
-                  <p className="text-xs sm:text-sm text-white font-semibold whitespace-nowrap">
-                    <span className="font-bold hidden sm:inline">الشركة النشطة:</span>
-                    <span className="font-bold sm:hidden">الشركة:</span>{' '}
-                    <span className="text-yellow-200 font-bold truncate block sm:inline max-w-[150px] sm:max-w-none">
-                      {activeCompany.name}
-                    </span>
-                  </p>
-                </div>
-                <Link
-                  to="/companies"
-                  className="text-xs sm:text-sm text-white font-bold underline hover:text-yellow-200"
+
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              {/* Language switcher */}
+              <div className="flex items-center gap-1 rounded-lg bg-white/10 border border-white/20 px-2 py-1">
+                <span className="text-white text-xs font-semibold whitespace-nowrap">{t('language')}:</span>
+                <select
+                  value={i18n.language?.startsWith('ar') ? 'ar' : i18n.language?.startsWith('fr') ? 'fr' : 'en'}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="bg-white/20 text-white border-0 rounded px-2 py-1 text-sm font-bold cursor-pointer focus:ring-2 focus:ring-white/50"
+                  aria-label={t('language')}
                 >
-                  تبديل الشركة
-                </Link>
+                  {LANG_OPTIONS.map((opt) => (
+                    <option key={opt.code} value={opt.code} className="text-gray-900">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+
+              {activeCompany && (
+                <>
+                  <div className="bg-white/20 backdrop-blur-sm px-3 sm:px-5 py-2 sm:py-3 rounded-xl border-2 border-white/30 shadow-lg max-w-full sm:max-w-none">
+                    <p className="text-xs sm:text-sm text-white font-semibold whitespace-nowrap">
+                      <span className="font-bold hidden sm:inline">{t('active_company')}</span>
+                      <span className="font-bold sm:hidden">{t('active_company_short')}</span>{' '}
+                      <span className="text-yellow-200 font-bold truncate block sm:inline max-w-[150px] sm:max-w-none">
+                        {activeCompany.name}
+                      </span>
+                    </p>
+                  </div>
+                  <Link
+                    to="/companies"
+                    className="text-xs sm:text-sm text-white font-bold underline hover:text-yellow-200"
+                  >
+                    {t('switch_company')}
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -76,7 +117,7 @@ export default function Layout({ children }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
-              <span>القائمة</span>
+              <span>{t('menu')}</span>
             </button>
           </div>
 
@@ -94,8 +135,7 @@ export default function Layout({ children }) {
                       : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50 hover:border-b-4 hover:border-gray-300'
                   }`}
                 >
-                  {item.label}
-                  <span className="text-xs text-gray-600 mr-2 font-normal">({item.labelEn})</span>
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
@@ -113,12 +153,11 @@ export default function Layout({ children }) {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block px-4 py-3 text-sm font-bold transition-all duration-200 border-b border-gray-100 ${
                       isActive
-                        ? 'text-blue-700 bg-blue-50 border-r-4 border-r-blue-700'
+                        ? 'text-blue-700 bg-blue-50 nav-item-active'
                         : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
                     }`}
                   >
-                    {item.label}
-                    <span className="text-xs text-gray-600 mr-2 font-normal">({item.labelEn})</span>
+                    {t(item.labelKey)}
                   </Link>
                 );
               })}
@@ -152,7 +191,7 @@ export default function Layout({ children }) {
                 to="/about-methodology"
                 className="text-xs font-semibold text-blue-700 hover:text-blue-900 underline decoration-dotted"
               >
-                معرفة المزيد عن المرجعية العلمية
+                {t('learn_more_methodology')}
               </Link>
             </div>
           </div>

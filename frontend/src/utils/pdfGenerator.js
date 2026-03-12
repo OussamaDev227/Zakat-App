@@ -1,11 +1,12 @@
 /**
  * PDF Generator Utility for Zakat Calculation Reports
- * 
- * Generates PDF reports with company information and calculation summary
- * Supports RTL (Right-to-Left) layout for Arabic content
+ *
+ * Generates PDF reports with company information and calculation summary.
+ * Uses i18n for labels so PDF language matches current UI language.
  */
 
 import { jsPDF } from 'jspdf';
+import i18n from '../i18n';
 
 /**
  * Generate a PDF report for a zakat calculation
@@ -21,8 +22,9 @@ export async function generateZakatReportPDF(calculation) {
       format: 'a4'
     });
 
-    // Set RTL direction for Arabic text
-    doc.setR2L(true);
+    const lang = (i18n.language || 'ar').split('-')[0];
+    const isRtl = lang === 'ar';
+    doc.setR2L(isRtl);
 
     // Page dimensions
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -50,11 +52,11 @@ export async function generateZakatReportPDF(calculation) {
       return lines.length * (fontSize * 0.4); // Return height used
     };
 
-    // Helper function to format date
+    const locale = lang === 'ar' ? 'ar-DZ' : lang === 'fr' ? 'fr-FR' : 'en-US';
     const formatDate = (dateString) => {
-      if (!dateString) return 'غير محدد';
+      if (!dateString) return i18n.t('date_unspecified');
       const date = new Date(dateString);
-      return date.toLocaleDateString('ar-SA', {
+      return date.toLocaleString(locale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -85,7 +87,7 @@ export async function generateZakatReportPDF(calculation) {
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(34, 139, 34); // Green color matching theme
-    const titleText = 'تقرير حساب الزكاة';
+    const titleText = i18n.t('report_title');
     const titleWidth = doc.getTextWidth(titleText);
     doc.text(titleText, pageWidth - margin, yPosition, { align: 'right' });
     yPosition += 15;
@@ -100,16 +102,15 @@ export async function generateZakatReportPDF(calculation) {
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text('معلومات الشركة', pageWidth - margin, yPosition, { align: 'right' });
+    doc.text(i18n.t('company_info'), pageWidth - margin, yPosition, { align: isRtl ? 'right' : 'left' });
     yPosition += 10;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     
-    // Company Name
     if (calculation.company_name) {
       const companyNameHeight = addText(
-        `اسم الشركة: ${calculation.company_name}`,
+        `${i18n.t('company_name_pdf')} ${calculation.company_name}`,
         pageWidth - margin,
         yPosition,
         { fontSize: 12, maxWidth: contentWidth }
@@ -117,13 +118,12 @@ export async function generateZakatReportPDF(calculation) {
       yPosition += companyNameHeight + 5;
     }
 
-    // Company Type
     if (calculation.company_type) {
-      const companyTypeText = calculation.company_type === 'LLC' 
-        ? 'نوع الشركة: شركة ذات مسؤولية محدودة'
+      const companyTypeText = calculation.company_type === 'LLC'
+        ? i18n.t('company_type_llc_pdf')
         : calculation.company_type === 'SOLE_PROPRIETORSHIP'
-        ? 'نوع الشركة: مؤسسة فردية'
-        : `نوع الشركة: ${calculation.company_type}`;
+        ? i18n.t('company_type_sole_pdf')
+        : `${i18n.t('company_type')}: ${calculation.company_type}`;
       
       const companyTypeHeight = addText(
         companyTypeText,
@@ -134,11 +134,10 @@ export async function generateZakatReportPDF(calculation) {
       yPosition += companyTypeHeight + 5;
     }
 
-    // Fiscal Year
     const fiscalYear = formatFiscalYear();
     if (fiscalYear) {
       const fiscalYearHeight = addText(
-        `السنة المالية: ${fiscalYear}`,
+        `${i18n.t('fiscal_year_label')} ${fiscalYear}`,
         pageWidth - margin,
         yPosition,
         { fontSize: 12, maxWidth: contentWidth }
@@ -151,15 +150,14 @@ export async function generateZakatReportPDF(calculation) {
     // Calculation Summary Section
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('ملخص الحساب', pageWidth - margin, yPosition, { align: 'right' });
+    doc.text(i18n.t('summary'), pageWidth - margin, yPosition, { align: isRtl ? 'right' : 'left' });
     yPosition += 10;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
 
-    // Calculation Date
     const displayDate = calculation.calculation_date || calculation.created_at;
-    const dateText = `تاريخ الحساب: ${formatDate(displayDate)}`;
+    const dateText = `${i18n.t('calculation_date_label')} ${formatDate(displayDate)}`;
     const dateHeight = addText(
       dateText,
       pageWidth - margin,
@@ -168,12 +166,11 @@ export async function generateZakatReportPDF(calculation) {
     );
     yPosition += dateHeight + 5;
 
-    // Status
-    const statusText = calculation.status === 'FINALIZED' 
-      ? 'الحالة: نهائي'
+    const statusText = calculation.status === 'FINALIZED'
+      ? `${i18n.t('table_status')}: ${i18n.t('status_finalized')}`
       : calculation.status === 'DRAFT'
-      ? 'الحالة: مسودة'
-      : `الحالة: ${calculation.status}`;
+      ? `${i18n.t('table_status')}: ${i18n.t('status_draft')}`
+      : `${i18n.t('table_status')}: ${calculation.status}`;
     
     const statusHeight = addText(
       statusText,
@@ -185,7 +182,7 @@ export async function generateZakatReportPDF(calculation) {
 
     // Nisab value (if set)
     if (calculation.nisab_value != null) {
-      const nisabText = `قيمة النصاب: ${formatCurrency(calculation.nisab_value)} د.ج`;
+      const nisabText = `${i18n.t('nisab_value')}: ${formatCurrency(calculation.nisab_value)} ${i18n.t('currency')}`;
       const nisabHeight = addText(
         nisabText,
         pageWidth - margin,
@@ -197,7 +194,7 @@ export async function generateZakatReportPDF(calculation) {
 
     // Items excluded due to Hawl
     if (calculation.items_excluded_hawl > 0) {
-      const hawlExcludedText = `بنود مستبعدة (لم يمر عليها الحول): ${calculation.items_excluded_hawl}`;
+      const hawlExcludedText = `${i18n.t('items_excluded_hawl')}: ${calculation.items_excluded_hawl}`;
       const hawlHeight = addText(
         hawlExcludedText,
         pageWidth - margin,
@@ -213,7 +210,7 @@ export async function generateZakatReportPDF(calculation) {
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(34, 139, 34);
-    const zakatBaseText = `وعاء الزكاة: ${formatCurrency(calculation.zakat_base)} د.ج`;
+    const zakatBaseText = `${i18n.t('zakat_base_pdf')}: ${formatCurrency(calculation.zakat_base)} ${i18n.t('currency')}`;
     const zakatBaseHeight = addText(
       zakatBaseText,
       pageWidth - margin,
@@ -227,8 +224,8 @@ export async function generateZakatReportPDF(calculation) {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(34, 139, 34);
     const zakatAmountText = calculation.below_nisab
-      ? `مبلغ الزكاة (2.5%): ${formatCurrency(calculation.zakat_amount)} د.ج — لا زكاة (دون النصاب)`
-      : `مبلغ الزكاة (2.5%): ${formatCurrency(calculation.zakat_amount)} د.ج`;
+      ? `${i18n.t('zakat_amount_pdf')}: ${formatCurrency(calculation.zakat_amount)} ${i18n.t('currency')} — ${i18n.t('below_nisab')}`
+      : `${i18n.t('zakat_amount_pdf')}: ${formatCurrency(calculation.zakat_amount)} ${i18n.t('currency')}`;
     const zakatAmountHeight = addText(
       zakatAmountText,
       pageWidth - margin,
@@ -242,11 +239,10 @@ export async function generateZakatReportPDF(calculation) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(128, 128, 128);
-    const footerText = `تم إنشاء التقرير في: ${formatDate(new Date().toISOString())}`;
-    doc.text(footerText, pageWidth - margin, footerY, { align: 'right' });
+    const footerText = `${i18n.t('report_generated_at')} ${formatDate(new Date().toISOString())}`;
+    doc.text(footerText, pageWidth - margin, footerY, { align: isRtl ? 'right' : 'left' });
 
-    // Generate filename
-    const companyName = calculation.company_name || 'شركة';
+    const companyName = calculation.company_name || i18n.t('company');
     const date = displayDate ? new Date(displayDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
     const filename = `تقرير_زكاة_${companyName}_${date}.pdf`.replace(/\s+/g, '_');
 
@@ -254,6 +250,6 @@ export async function generateZakatReportPDF(calculation) {
     doc.save(filename);
   } catch (error) {
     console.error('Error generating PDF:', error);
-    throw new Error('فشل في إنشاء ملف PDF. يرجى المحاولة مرة أخرى.');
+    throw new Error(i18n.t('pdf_generation_failed'));
   }
 }

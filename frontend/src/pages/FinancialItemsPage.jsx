@@ -1,10 +1,11 @@
 /**
  * Financial Items Page
- * 
+ *
  * Manage financial items for the active company
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
 import {
   getFinancialItems,
@@ -17,6 +18,7 @@ import FinancialItemsTable from '../components/FinancialItemsTable';
 import ExcelUploadForm from '../components/ExcelUploadForm';
 
 export default function FinancialItemsPage() {
+  const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function FinancialItemsPage() {
       setItems(data);
     } catch (error) {
       console.error('Failed to load items:', error);
-      alert('فشل تحميل البنود المالية: ' + error.message);
+      alert(t('load_items_failed') + ': ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -58,12 +60,12 @@ export default function FinancialItemsPage() {
       setShowForm(false);
       setEditingItem(null);
     } catch (error) {
-      alert('فشل الحفظ: ' + error.message);
+      alert(t('save_failed') + ': ' + error.message);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm('هل أنت متأكد من حذف هذا البند المالي؟')) {
+    if (!confirm(t('confirm_delete_item'))) {
       return;
     }
 
@@ -71,7 +73,7 @@ export default function FinancialItemsPage() {
       await deleteFinancialItem(id);
       await loadItems();
     } catch (error) {
-      alert('فشل الحذف: ' + error.message);
+      alert(t('delete_failed') + ': ' + error.message);
     }
   }
 
@@ -81,18 +83,18 @@ export default function FinancialItemsPage() {
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة البنود المالية</h1>
-          <p className="text-sm sm:text-base text-gray-600">إضافة وتعديل البنود المالية للشركة النشطة</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t('manage_financial_items')}</h1>
+          <p className="text-sm sm:text-base text-gray-600">{t('add_edit_items_intro')}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button 
             onClick={() => setShowExcelUpload(true)} 
             className="btn-secondary text-base sm:text-lg w-full sm:w-auto"
           >
-            📊 استيراد من Excel
+            📊 {t('excel_import')}
           </button>
           <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
-            + إضافة بند مالي جديد
+            + {t('add_financial_item')}
           </button>
         </div>
       </div>
@@ -126,7 +128,7 @@ export default function FinancialItemsPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-8 text-gray-700 font-medium">جاري التحميل...</div>
+        <div className="text-center py-8 text-gray-700 font-medium">{t('loading')}</div>
       ) : (
         <FinancialItemsTable
           items={items}

@@ -6,6 +6,7 @@
  */
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRules } from '../contexts/RulesContext';
 
 function normalizeName(name) {
@@ -19,6 +20,7 @@ function normalizeName(name) {
 }
 
 export default function FinancialItemsTable({ items, onEdit, onDelete }) {
+  const { t } = useTranslation();
   const { rules } = useRules();
 
   const duplicateIds = useMemo(() => {
@@ -63,7 +65,7 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
   if (items.length === 0) {
     return (
       <div className="card text-center py-8">
-        <p className="text-gray-700 font-medium">لا توجد بنود مالية</p>
+        <p className="text-gray-700 font-medium">{t('no_financial_items')}</p>
       </div>
     );
   }
@@ -74,11 +76,11 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
         <table>
           <thead>
             <tr>
-              <th>الاسم</th>
-              <th>الفئة</th>
-              <th>النوع</th>
-              <th>المبلغ</th>
-              <th>الإجراءات</th>
+              <th>{t('table_name')}</th>
+              <th>{t('table_category')}</th>
+              <th>{t('table_type')}</th>
+              <th>{t('table_amount')}</th>
+              <th>{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -86,7 +88,7 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
               <tr
                 key={item.id}
                 className={duplicateIds.has(item.id) ? 'bg-amber-50 border-l-4 border-l-amber-400' : ''}
-                title={duplicateIds.has(item.id) ? 'اسم مشابه لبند آخر - قد ترغب بالدمج أو التمييز' : undefined}
+                title={duplicateIds.has(item.id) ? t('similar_name_hint') : undefined}
               >
                 <td className="font-bold text-gray-900">
                   {item.name}
@@ -96,15 +98,15 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
                     item.category === 'ASSET' ? 'badge-info' :
                     item.category === 'EQUITY' ? 'badge-warning' : 'badge-danger'
                   }`}>
-                    {item.category === 'ASSET' ? 'أصل' :
-                     item.category === 'EQUITY' ? 'حقوق الملكية' : 'التزام'}
+                    {                    item.category === 'ASSET' ? t('category_asset') :
+                     item.category === 'EQUITY' ? t('category_equity') : t('category_liability')}
                   </span>
                 </td>
                 <td className="text-sm font-semibold text-gray-700" dir="rtl">
                   {getTypeLabel(item)}
                 </td>
                 <td className="font-bold text-gray-900">
-                  {parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">د.ج</span>
+                  {parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">{t('currency')}</span>
                 </td>
                 <td>
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
@@ -112,13 +114,13 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
                       onClick={() => onEdit(item)}
                       className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                     >
-                      تعديل
+                      {t('edit')}
                     </button>
                     <button
                       onClick={() => onDelete(item.id)}
                       className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                     >
-                      حذف
+                      {t('delete')}
                     </button>
                   </div>
                 </td>

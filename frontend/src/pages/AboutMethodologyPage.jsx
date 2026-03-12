@@ -141,10 +141,17 @@ export default function AboutMethodologyPage() {
                   <p className="text-sm font-semibold text-green-800">تُعتبر بالكامل ضمن وعاء الزكاة.</p>
                 </div>
                 <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  <h4 className="font-bold text-gray-900 mb-1">المخزونات وعروض التجارة</h4>
-                  <p className="text-sm text-gray-700 mb-1">المخزون المعد للبيع أو للاستهلاك في نشاط الشركة.</p>
+                  <h4 className="font-bold text-gray-900 mb-1">عروض التجارة / البضاعة المعدة للبيع</h4>
+                  <p className="text-sm text-gray-700 mb-1">البضاعة والسلع المعدة للبيع (عروض التجارة).</p>
                   <p className="text-sm font-semibold text-green-800">
-                    يُعتبر ضمن وعاء الزكاة بقيمته القابلة للتحقق.
+                    تُعتبر ضمن وعاء الزكاة بقيمتها القابلة للتحقق (عروض تجارة).
+                  </p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <h4 className="font-bold text-gray-900 mb-1">المخزون الإنتاجي</h4>
+                  <p className="text-sm text-gray-700 mb-1">المواد الأولية، والإنتاج تحت التصنيع، ومخزون التصنيع.</p>
+                  <p className="text-sm font-semibold text-yellow-800">
+                    يُصنّف حسب الإطار التصوري؛ لا يُعدّ بالضرورة عروض تجارة، وقد يحتاج تقديراً مهنياً وشرعياً.
                   </p>
                 </div>
                 <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -203,8 +210,8 @@ export default function AboutMethodologyPage() {
               <h3 className="text-base font-bold text-gray-900 mb-3">منطق التصنيف في التطبيق</h3>
               <p className="text-gray-800 text-base leading-relaxed mb-3">
                 عند إدخال البنود المالية في النظام، يتم ربط كل بند بفئة محاسبية (أصل / التزام) ونوع تفصيلي (مثل
-                نقدية، مخزون، ذمم، خصوم قصيرة الأجل، ...). يعتمد محرك القواعد على هذا التصنيف لتحديد ما إذا كان
-                البند:
+                نقدية، عروض تجارة، مخزون إنتاجي، ذمم مدينة، أصول ثابتة، خصوم قصيرة الأجل، ...). يعتمد محرك القواعد
+                على هذا التصنيف لتحديد ما إذا كان البند:
               </p>
               <ul className="list-disc pr-6 text-base text-gray-800 space-y-1">
                 <li>يدخل بالكامل في وعاء الزكاة،</li>

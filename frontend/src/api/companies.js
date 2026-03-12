@@ -3,7 +3,7 @@
  * When company session is active, list/get/update/delete are scoped to current company.
  */
 
-import { get, post, put, del } from './client';
+import { get, post, put, patch, del } from './client';
 
 /**
  * Get minimal company list (id, name only) for selection / switch. No auth required.
@@ -40,6 +40,13 @@ export async function createCompany(companyData) {
  */
 export async function updateCompany(id, companyData) {
   return put(`/companies/${id}`, companyData);
+}
+
+/**
+ * Update only the company UI language (ar, fr, en). Persists per company.
+ */
+export async function updateCompanyLanguage(companyId, language) {
+  return patch(`/companies/${companyId}/language`, { language });
 }
 
 /**

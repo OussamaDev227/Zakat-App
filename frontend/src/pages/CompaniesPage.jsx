@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getCompaniesMinimal,
   getCompanies,
@@ -18,6 +19,7 @@ import CompanyForm from '../components/CompanyForm';
 import CompanyPasswordModal from '../components/CompanyPasswordModal';
 
 export default function CompaniesPage() {
+  const { t } = useTranslation();
   const {
     activeCompany,
     hasCompanySession,
@@ -49,7 +51,7 @@ export default function CompaniesPage() {
       setCompaniesMinimal(data);
     } catch (error) {
       console.error('Failed to load companies:', error);
-      alert('فشل تحميل الشركات: ' + error.message);
+      alert(t('load_companies_failed') + ': ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -89,7 +91,7 @@ export default function CompaniesPage() {
         await loadCurrentCompany();
       }
     } catch (error) {
-      setPasswordError(error.message || 'كلمة المرور غير صحيحة');
+      setPasswordError(error.message || t('errors_invalid_password'));
     } finally {
       setPasswordLoading(false);
     }
@@ -116,15 +118,13 @@ export default function CompaniesPage() {
         await loadMinimal();
       }
     } catch (error) {
-      alert('فشل الحفظ: ' + error.message);
+      alert(t('save_failed') + ': ' + error.message);
     }
   }
 
   async function handleDelete(id) {
     if (
-      !confirm(
-        'هل أنت متأكد من حذف هذه الشركة؟ سيتم حذف جميع البنود المالية والحسابات المرتبطة بها.'
-      )
+      !confirm(t('confirm_delete_company'))
     ) {
       return;
     }
@@ -139,23 +139,21 @@ export default function CompaniesPage() {
         await loadCurrentCompany();
       }
     } catch (error) {
-      alert('فشل الحذف: ' + error.message);
+      alert(t('delete_failed') + ': ' + error.message);
     }
   }
 
   if (loading && !companiesMinimal.length && !currentCompanyDetail) {
-    return <div className="text-center py-8 text-gray-700 font-medium">جاري التحميل...</div>;
+    return <div className="text-center py-8 text-gray-700 font-medium">{t('loading')}</div>;
   }
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة الشركات</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t('manage_companies')}</h1>
           <p className="text-sm sm:text-base text-gray-600">
-            {hasCompanySession
-              ? 'الشركة الحالية. استخدم "تبديل الشركة" للدخول إلى شركة أخرى (ستُطلب كلمة المرور).'
-              : 'اختر شركة وأدخل كلمة المرور للدخول، أو أضف شركة جديدة.'}
+            {hasCompanySession ? t('companies_intro_with_session') : t('companies_intro_no_session')}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -165,7 +163,7 @@ export default function CompaniesPage() {
               onClick={handleSwitchCompany}
               className="px-4 py-2 border-2 border-blue-600 text-blue-700 rounded-lg font-bold hover:bg-blue-50"
             >
-              تبديل الشركة
+              {t('switch_company')}
             </button>
           )}
           <button
@@ -176,7 +174,7 @@ export default function CompaniesPage() {
             }}
             className="btn-primary text-base sm:text-lg w-full sm:w-auto"
           >
-            + إضافة شركة جديدة
+            + {t('add_company_new')}
           </button>
         </div>
       </div>
@@ -211,20 +209,18 @@ export default function CompaniesPage() {
               <table>
                 <thead>
                   <tr>
-                    <th>الاسم</th>
-                    <th>النوع</th>
-                    <th>بداية السنة المالية</th>
-                    <th>نهاية السنة المالية</th>
-                    <th>الإجراءات</th>
+                    <th>{t('name')}</th>
+                    <th>{t('type')}</th>
+                    <th>{t('financial_year_start')}</th>
+                    <th>{t('financial_year_end')}</th>
+                    <th>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td className="font-bold text-gray-900">{currentCompanyDetail.name}</td>
                     <td className="font-semibold text-gray-800">
-                      {currentCompanyDetail.legal_type === 'LLC'
-                        ? 'ذات مسؤولية محدودة'
-                        : 'مؤسسة فردية'}
+                      {currentCompanyDetail.legal_type === 'LLC' ? t('legal_type_llc') : t('legal_type_sole')}
                     </td>
                     <td className="font-medium text-gray-700">
                       {new Date(currentCompanyDetail.fiscal_year_start).toLocaleDateString(
@@ -244,14 +240,14 @@ export default function CompaniesPage() {
                           }}
                           className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
                         >
-                          تعديل
+                          {t('edit')}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(currentCompanyDetail.id)}
                           className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
                         >
-                          حذف
+                          {t('delete')}
                         </button>
                       </div>
                     </td>
@@ -261,19 +257,19 @@ export default function CompaniesPage() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-700 font-medium">
-              لا يمكن تحميل بيانات الشركة الحالية.
+              {t('current_company_load_failed')}
             </div>
           )
         ) : (
           <>
             {companiesMinimal.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-700 font-medium">لا توجد شركات. ابدأ بإضافة شركة جديدة.</p>
+                <p className="text-gray-700 font-medium">{t('no_companies')}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm font-bold text-gray-700 mb-3">
-                  اختر شركة وأدخل كلمة المرور للدخول:
+                  {t('select_company_and_password')}
                 </p>
                 <ul className="divide-y divide-gray-200">
                   {companiesMinimal.map((company) => (
@@ -287,7 +283,7 @@ export default function CompaniesPage() {
                         onClick={() => openPasswordModal(company)}
                         className="btn-primary text-sm py-2 px-4"
                       >
-                        دخول
+                        {t('enter')}
                       </button>
                     </li>
                   ))}

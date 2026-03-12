@@ -11,6 +11,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RulesProvider } from './contexts/RulesContext';
 import { CompanyProvider } from './contexts/CompanyContext';
@@ -27,16 +28,18 @@ import AboutMethodologyPage from './pages/AboutMethodologyPage';
 
 // Component to handle root redirect based on auth status
 function RootRedirect() {
+  const { t, i18n } = useTranslation();
   const { isAuthenticated, isLoading } = useAuth();
-  
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" dir="rtl">
-        <p className="text-gray-700 font-medium">جاري التحميل...</p>
+      <div className="min-h-screen flex items-center justify-center" dir={dir}>
+        <p className="text-gray-700 font-medium">{t('loading')}</p>
       </div>
     );
   }
-  
+
   return <Navigate to={isAuthenticated ? "/companies" : "/login"} replace />;
 }
 
