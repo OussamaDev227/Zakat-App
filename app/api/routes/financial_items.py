@@ -15,7 +15,8 @@ from app.models.financial_item import FinancialItem, ItemCategory, AssetType
 from app.models.company import Company
 from app.rules.engine import RuleEngine
 from app.validators.financial_item_validators import find_duplicate_financial_items
-from app.core.security import get_current_company_id
+from app.core.security import get_active_company_id, require_company_roles
+from app.models.user_company import CompanyRole
 
 router = APIRouter()
 
@@ -30,7 +31,8 @@ async def create_financial_item(
     item_data: FinancialItemCreate,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Create a new financial item with rule code validation. Company is taken from session only."""
     company = db.query(Company).filter(Company.id == company_id).first()
@@ -160,7 +162,12 @@ async def create_financial_item(
 async def list_financial_items(
     category: Optional[ItemCategory] = Query(None, description="Filter by category (optional)"),
     db: Session = Depends(get_db),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(
+        CompanyRole.ACCOUNTANT,
+        CompanyRole.OWNER,
+        CompanyRole.SHARIA_AUDITOR,
+    )),
+    company_id: int = Depends(get_active_company_id),
 ):
     """List financial items for the current company (from session). Optionally filtered by category."""
     company = db.query(Company).filter(Company.id == company_id).first()
@@ -180,7 +187,12 @@ async def list_financial_items(
 async def get_financial_item(
     item_id: int,
     db: Session = Depends(get_db),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(
+        CompanyRole.ACCOUNTANT,
+        CompanyRole.OWNER,
+        CompanyRole.SHARIA_AUDITOR,
+    )),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Get a financial item by ID. Only if it belongs to the current company."""
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()
@@ -197,7 +209,8 @@ async def update_financial_item(
     item_data: FinancialItemUpdate,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Update a financial item with rule code validation. Only if it belongs to the current company."""
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()
@@ -263,7 +276,8 @@ async def update_financial_item(
 async def delete_financial_item(
     item_id: int,
     db: Session = Depends(get_db),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Delete a financial item. Only if it belongs to the current company."""
     item = db.query(FinancialItem).filter(FinancialItem.id == item_id).first()

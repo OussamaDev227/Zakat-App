@@ -10,7 +10,8 @@ from app.schemas.excel_upload import ExcelUploadResponse
 from app.models.company import Company
 from app.services.excel_ingestion_service import ExcelIngestionService
 from app.rules.engine import RuleEngine
-from app.core.security import get_current_company_id
+from app.core.security import get_active_company_id, require_company_roles
+from app.models.user_company import CompanyRole
 
 router = APIRouter()
 
@@ -25,7 +26,8 @@ async def upload_excel_file(
     file: UploadFile = File(..., description="Excel file (.xlsx) with financial statement data"),
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """
     Upload and process Excel file containing financial statement items.

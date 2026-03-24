@@ -5,7 +5,7 @@
  * When a company session exists, Authorization: Bearer <token> is sent (see authStore).
  */
 
-import { getCompanyToken } from './authStore';
+import { getUserToken } from './authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zakat-app-y6su.onrender.com';
 
@@ -40,7 +40,7 @@ async function fetchJson(url, options = {}) {
     'Content-Type': 'application/json',
     ...options.headers,
   };
-  const token = getCompanyToken();
+  const token = getUserToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

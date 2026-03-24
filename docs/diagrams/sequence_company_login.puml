@@ -1,0 +1,48 @@
+@startuml sequence_company_login
+' Sequence Diagram - Company Login
+' Purpose: Shows the business workflow from user login (demo credentials) through
+' company selection with password to establishment of company-scoped session.
+' Participants: Actor (Accountant or Company Owner), LoginPage, AuthContext,
+' CompanySelector, CompanyPasswordModal, Auth API, Company DB. Academic documentation.
+
+title Sequence Diagram - Company Login
+
+actor "Company Owner" as User
+participant "LoginPage" as LoginPage
+participant "AuthContext" as AuthContext
+participant "CompanySelector" as CompanySelector
+participant "CompanyPasswordModal" as Modal
+participant "Auth API" as API
+database "Company DB" as DB
+
+== User authentication ==
+User -> LoginPage : Enter username and password
+LoginPage -> AuthContext : login(username, password)
+AuthContext -> AuthContext : Validate (static credentials)
+AuthContext -> AuthContext : setAuthenticated(true)
+AuthContext -> AuthContext : Persist to localStorage
+AuthContext --> LoginPage : success
+LoginPage -> User : Redirect to /companies
+
+== Company selection ==
+User -> CompanySelector : Select company from list
+CompanySelector -> Modal : Open modal (companyId)
+Modal -> User : Request company password
+User -> Modal : Enter company password
+Modal -> API : POST /auth/company/select\n{ company_id, password }
+
+API -> DB : Load Company by id
+DB --> API : Company
+API -> API : verify_company_password(password, hash)
+alt Invalid password
+  API --> Modal : 401 Invalid company password
+  Modal --> User : Show error
+else Valid password
+  API -> API : create_company_token(company_id)
+  API --> Modal : 200 { access_token, company }
+  Modal -> Modal : setCompanyToken(access_token)
+  Modal -> CompanySelector : Set company in context
+  CompanySelector -> User : Redirect to app (e.g. /financial-items)
+end
+
+@enduml

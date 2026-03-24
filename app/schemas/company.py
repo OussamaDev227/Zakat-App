@@ -67,6 +67,7 @@ class CompanyMinimalResponse(BaseModel):
     """Minimal company for selection list (id + name only)."""
     id: int
     name: str
+    role: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

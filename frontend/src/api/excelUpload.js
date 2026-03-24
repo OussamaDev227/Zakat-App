@@ -5,7 +5,7 @@
  * Company is taken from session (backend); do not pass companyId.
  */
 
-import { getCompanyToken } from './authStore';
+import { getUserToken } from './authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zakat-app-y6su.onrender.com';
 
@@ -20,7 +20,7 @@ export async function uploadExcelFile(file) {
   
   const url = `${API_BASE_URL}/zakat/excel/upload`;
   const headers = {};
-  const token = getCompanyToken();
+  const token = getUserToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
   
   const response = await fetch(url, {

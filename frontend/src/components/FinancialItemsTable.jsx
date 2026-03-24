@@ -20,6 +20,7 @@ function normalizeName(name) {
 }
 
 export default function FinancialItemsTable({ items, onEdit, onDelete }) {
+  const canEdit = typeof onEdit === 'function' && typeof onDelete === 'function';
   const { t } = useTranslation();
   const { rules } = useRules();
 
@@ -80,7 +81,7 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
               <th>{t('table_category')}</th>
               <th>{t('table_type')}</th>
               <th>{t('table_amount')}</th>
-              <th>{t('actions')}</th>
+              {canEdit && <th>{t('actions')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -108,22 +109,24 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
                 <td className="font-bold text-gray-900">
                   {parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-blue-700">{t('currency')}</span>
                 </td>
-                <td>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
-                    <button
-                      onClick={() => onEdit(item)}
-                      className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
-                    >
-                      {t('edit')}
-                    </button>
-                    <button
-                      onClick={() => onDelete(item.id)}
-                      className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
-                    >
-                      {t('delete')}
-                    </button>
-                  </div>
-                </td>
+                {canEdit && (
+                  <td>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
+                      <button
+                        onClick={() => onEdit(item)}
+                        className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
+                      >
+                        {t('edit')}
+                      </button>
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
+                      >
+                        {t('delete')}
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

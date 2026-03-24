@@ -1,0 +1,64 @@
+@startuml sequence_excel_import
+' Sequence Diagram - Excel Import
+' Purpose: Shows the business workflow when a user uploads an Excel file containing
+' financial statement data. The system parses rows, maps categories to zakat codes,
+' validates with RuleEngine, creates financial items, runs a zakat calculation, and
+' returns import statistics and calculation result. Actor: Accountant. Academic documentation.
+
+title Sequence Diagram - Excel Import
+
+actor "Accountant" as User
+participant "ExcelUploadForm" as Form
+participant "Excel Upload API" as API
+participant "ExcelIngestionService" as Ingestion
+participant "ExcelParser" as Parser
+participant "CategoryMapper" as Mapper
+participant "ZakatService" as ZakatService
+participant "RuleEngine" as RuleEngine
+database "DB" as DB
+
+User -> Form : Select .xlsx file and upload
+Form -> API : POST /zakat/excel/upload\nBearer company_token\nmultipart file
+
+API -> API : Save uploaded file to temp path
+API -> Ingestion : ingest_excel_file(company_id, temp_file_path)
+
+Ingestion -> Parser : parse_excel_file(file_path)
+Parser --> Ingestion : rows (item_name, category, amount, notes, row_number)
+
+Ingestion -> Ingestion : validate_excel_structure(rows)
+alt Structure invalid
+  Ingestion --> API : ValueError
+  API --> Form : 422 Invalid structure
+else Structure valid
+  Ingestion -> ZakatService : start_calculation(company_id)
+  ZakatService -> DB : Create or resume DRAFT ZakatCalculation
+  ZakatService -> DB : Auto-link unlinked items
+  ZakatService --> Ingestion : ZakatCalculation
+
+  loop For each row
+    Ingestion -> Mapper : map_category_to_zakat_code(category_str)
+    Mapper --> Ingestion : mapping (category, asset_type/liability_code/equity_code)
+    Ingestion -> RuleEngine : is_valid_asset_type / is_valid_liability_code / is_valid_equity_code
+    RuleEngine --> Ingestion : valid
+    Ingestion -> Ingestion : find_duplicate_financial_items (skip if duplicate)
+    Ingestion -> ZakatService : add_or_update_item(calculation_id, item_data)
+    ZakatService -> DB : Create FinancialItem, link to calculation
+  end
+
+  Ingestion -> ZakatService : recalculate_calculation(calculation_id)
+  ZakatService -> RuleEngine : Apply rules
+  RuleEngine --> ZakatService : Per-item results
+  ZakatService -> DB : Persist ZakatItemResult, update zakat_base, zakat_amount
+  ZakatService --> Ingestion : result
+
+  Ingestion -> ZakatService : get_calculation_with_rules(calculation_id)
+  ZakatService --> Ingestion : CalculationResponse
+  Ingestion -> Ingestion : Build summary (total_rows, imported_rows, errors, zakat_base, zakat_due, excluded_items)
+  Ingestion --> API : ExcelUploadResponse
+  API -> API : Delete temp file
+  API --> Form : 200 ExcelUploadResponse
+  Form --> User : Show import result and link to calculation
+end
+
+@enduml

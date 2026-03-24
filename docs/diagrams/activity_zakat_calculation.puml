@@ -1,0 +1,42 @@
+@startuml activity_zakat_calculation
+' Activity Diagram - Zakat Calculation Workflow
+' Purpose: Shows the business workflow for performing a zakat calculation from
+' start (or resume draft) through adding/linking items, recalculating, and finalizing.
+' Focus on decisions and control flow. Suitable for academic software engineering documentation.
+
+title Activity Diagram - Zakat Calculation
+
+start
+
+:Open Zakat calculation screen;
+
+if (Draft calculation exists?) then (yes)
+  :Resume existing draft;
+else (no)
+  :Start new calculation;
+  :Create DRAFT ZakatCalculation;
+  :Auto-link unlinked financial items to calculation;
+endif
+
+:Apply rules (RuleEngine);
+:Compute zakat base and zakat amount;
+:Display calculation summary;
+
+repeat
+  :Add, link, or remove items;
+  :Recalculate;
+  :Apply rules and update zakat base / zakat amount;
+  :Display updated summary;
+repeat while (User makes more changes?) is (yes) not (no)
+
+:User chooses to finalize;
+
+:Set status = FINALIZED;
+:Set calculation_date = now;
+:Persist calculation (read-only);
+
+:Show finalized result;
+
+stop
+
+@enduml

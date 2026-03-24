@@ -1,31 +1,44 @@
 /**
- * Company session auth API
+ * User auth and company session API
  */
 
 import { post, get } from './client';
-import { setCompanyToken, clearCompanyToken } from './authStore';
+import { clearStoredUser, clearUserToken, setStoredUser, setUserToken } from './authStore';
+
+export async function login(email, password) {
+  const data = await post('/auth/login', { email, password });
+  setUserToken(data.access_token);
+  setStoredUser(data.user);
+  return data;
+}
+
+export async function getMe() {
+  return get('/auth/me');
+}
 
 /**
- * Select a company with password. On success, stores token in authStore.
+ * Select active company with optional company password.
+ * On success backend returns a refreshed token with active company scope.
  * @param {number} companyId - Company ID
- * @param {string} password - Company password
+ * @param {string|null} password - Company password (optional)
  * @returns {Promise<{ company: { id, name }, access_token }>}
  */
 export async function selectCompany(companyId, password) {
-  const data = await post('/auth/company/select', { company_id: companyId, password });
-  setCompanyToken(data.access_token);
+  const data = await post('/auth/company/select', { company_id: companyId, password: password || null });
+  setUserToken(data.access_token);
   return data;
 }
 
 /**
- * Clear company session (e.g. when switching company or logging out).
+ * Clear all authentication/session state.
  */
-export function clearCompanySession() {
-  clearCompanyToken();
+export function logout() {
+  clearUserToken();
+  clearStoredUser();
 }
 
 /**
- * Get current company (from session). Requires valid token.
+ * Get active company (from current token context).
  * @returns {Promise<{ id, name, ... }>}
  */
 export async function getCurrentCompany() {

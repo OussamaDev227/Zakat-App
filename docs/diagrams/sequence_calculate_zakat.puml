@@ -1,0 +1,62 @@
+@startuml sequence_calculate_zakat
+' Sequence Diagram - Calculate Zakat
+' Purpose: Shows the business workflow for starting a zakat calculation (draft),
+' adding or linking items, recalculating, and finalizing. The ZakatService coordinates
+' with RuleEngine and persistence. Actor: Accountant. Academic documentation.
+
+title Sequence Diagram - Calculate Zakat
+
+actor "Accountant" as User
+participant "ZakatPage" as Page
+participant "Zakat API" as API
+participant "ZakatService" as Service
+participant "RuleEngine" as RuleEngine
+database "DB" as DB
+
+== Start or resume draft ==
+User -> Page : Start calculation (or open draft)
+Page -> API : POST /zakat/calculation/start\nBearer company_token
+API -> Service : start_calculation(company_id)
+Service -> DB : Find or create DRAFT ZakatCalculation
+Service -> DB : Auto-link unlinked FinancialItems to calculation
+Service -> Service : recalculate_calculation(calculation_id)
+Service -> RuleEngine : Apply rules to items
+RuleEngine --> Service : Per-item results
+Service -> DB : Persist ZakatItemResult, update zakat_base, zakat_amount
+Service --> API : ZakatCalculation
+API --> Page : CalculationResponse (items, rules_used, zakat_base, zakat_amount)
+Page --> User : Show calculation summary
+
+== Add or link items (optional) ==
+User -> Page : Add item / Link existing item / Remove item
+Page -> API : POST .../item or .../link-item or DELETE .../item
+API -> Service : add_or_update_item / link_existing_item / remove_item_from_calculation
+Service -> DB : Update FinancialItem or ZakatItemResult
+Service -> Service : recalculate_calculation
+Service -> RuleEngine : Apply rules
+RuleEngine --> Service : Results
+Service -> DB : Persist
+Service --> API : CalculationResponse
+API --> Page : Updated response
+Page --> User : Update summary
+
+== Recalculate (optional) ==
+User -> Page : Recalculate
+Page -> API : POST .../recalculate
+API -> Service : recalculate_calculation(calculation_id)
+Service -> RuleEngine : Apply rules
+RuleEngine --> Service : Results
+Service -> DB : Update ZakatCalculation, ZakatItemResult
+Service --> API : CalculationResponse
+API --> Page : Updated response
+
+== Finalize ==
+User -> Page : Finalize calculation
+Page -> API : POST .../finalize
+API -> Service : finalize_calculation(calculation_id)
+Service -> DB : Set status=FINALIZED, calculation_date=now
+Service --> API : ZakatCalculation
+API --> Page : CalculationResponse
+Page --> User : Show finalized result
+
+@enduml

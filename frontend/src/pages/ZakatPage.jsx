@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
+import { useAuth } from '../contexts/AuthContext';
 import {
   startCalculation,
   getCalculation,
@@ -36,6 +37,7 @@ import { generateZakatReportPDF } from '../utils/pdfGenerator';
 
 export default function ZakatPage() {
   const { t } = useTranslation();
+  const { hasPermission } = useAuth();
   const { activeCompany } = useCompany();
   const [searchParams, setSearchParams] = useSearchParams();
   const [calculation, setCalculation] = useState(null);
@@ -50,6 +52,7 @@ export default function ZakatPage() {
   const calculationId = searchParams.get('calculation_id');
   const isDraft = calculation?.status === 'DRAFT';
   const isFinalized = calculation?.status === 'FINALIZED';
+  const canRunCalculations = hasPermission('runZakatCalculations');
 
   // Load calculation when calculation_id changes or company changes
   useEffect(() => {
@@ -379,7 +382,7 @@ export default function ZakatPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-3 pt-4 border-t border-blue-300">
-                {isDraft && (
+                {isDraft && canRunCalculations && (
                   <>
                     <button
                       onClick={handleRecalculate}
@@ -397,7 +400,7 @@ export default function ZakatPage() {
                     </button>
                   </>
                 )}
-                {isFinalized && (
+                {isFinalized && canRunCalculations && (
                   <button
                     onClick={handleCreateRevision}
                     disabled={loading}
@@ -424,7 +427,7 @@ export default function ZakatPage() {
           <div className="card border-2 border-blue-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">{t('items_in_calculation')}</h2>
-            {isDraft && (
+            {isDraft && canRunCalculations && (
               <button
                 onClick={() => setShowItemSelector(true)}
                 className="btn-primary w-full sm:w-auto text-sm sm:text-base"
@@ -439,7 +442,7 @@ export default function ZakatPage() {
                 <p className="text-gray-700 font-medium mb-4">
                   {t('no_items_in_calculation')}
                 </p>
-                {isDraft && (
+                {isDraft && canRunCalculations && (
                   <button
                     onClick={() => setShowItemSelector(true)}
                     className="btn-primary"
@@ -458,7 +461,7 @@ export default function ZakatPage() {
                     <th>{t('table_amount')}</th>
                     <th>{t('zakatable_col')}</th>
                     <th>{t('rule_code')}</th>
-                    {isDraft && <th>{t('actions')}</th>}
+                    {isDraft && canRunCalculations && <th>{t('actions')}</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -483,7 +486,7 @@ export default function ZakatPage() {
                         <td className="text-sm font-semibold text-purple-700">
                           {t(`rule_${item.rule_code}`) !== `rule_${item.rule_code}` ? t(`rule_${item.rule_code}`) : getRuleCodeArabic(item.rule_code)}
                         </td>
-                        {isDraft && (
+                        {isDraft && canRunCalculations && (
                           <td>
                             <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center">
                               <button

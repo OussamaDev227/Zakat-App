@@ -1,63 +1,99 @@
-/**
- * Auth Context
- * 
- * Manages authentication state for the application.
- * 
- * NOTE: This is a simple authentication system for academic/demo purposes.
- * - Uses static credentials (admin/admin123)
- * - No password hashing (academic scope)
- * - Auth state persisted in localStorage
- * - Easy to replace with backend authentication later
- */
+/** Auth context with backend JWT and role-based helpers. */
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { getMe, login as loginApi, logout as logoutApi } from '../api/auth';
+import { clearStoredUser, getStoredUser, getUserToken, setStoredUser } from '../api/authStore';
 
 const AuthContext = createContext(null);
 
-const AUTH_STORAGE_KEY = 'zakat_auth';
-const STATIC_USERNAME = 'admin';
-const STATIC_PASSWORD = 'admin123';
+const ROLE_ACTIONS = {
+  manageFinancialItems: ['ACCOUNTANT'],
+  importExcel: ['ACCOUNTANT'],
+  runZakatCalculations: ['ACCOUNTANT'],
+  viewReports: ['ACCOUNTANT', 'OWNER', 'SHARIA_AUDITOR'],
+  manageCompanies: [],
+};
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [systemRole, setSystemRole] = useState('USER');
+  const [role, setRole] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check localStorage on mount to restore auth state
   useEffect(() => {
-    const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
+    async function restore() {
+      const token = getUserToken();
+      const storedUser = getStoredUser();
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      if (storedUser) {
+        setUser(storedUser);
+        setSystemRole(storedUser.system_role || 'USER');
+      }
+      try {
+        const me = await getMe();
+        setUser(me);
+        setStoredUser(me);
+        setSystemRole(me.system_role || 'USER');
+      } catch {
+        logoutApi();
+        clearStoredUser();
+        setUser(null);
+        setSystemRole('USER');
+        setRole(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+    restore();
   }, []);
 
-  /**
-   * Login function
-   * Validates credentials against static values
-   * @param {string} username - Username input
-   * @param {string} password - Password input
-   * @returns {boolean} - true if credentials are correct, false otherwise
-   */
-  function login(username, password) {
-    if (username === STATIC_USERNAME && password === STATIC_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      return true;
-    }
-    return false;
+  async function login(email, password) {
+    const data = await loginApi(email, password);
+    setUser(data.user);
+    setSystemRole(data.user?.system_role || 'USER');
+    setRole(null);
+    return data;
   }
 
-  /**
-   * Logout function
-   * Clears authentication state and localStorage
-   */
+  function setActiveRole(newRole) {
+    setRole(newRole || null);
+  }
+
   function logout() {
-    setIsAuthenticated(false);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    logoutApi();
+    setUser(null);
+    setSystemRole('USER');
+    setRole(null);
+  }
+
+  function hasRole(roleName) {
+    return role === roleName;
+  }
+
+  function hasPermission(action) {
+    if (systemRole === 'ADMIN') return true;
+    const allowed = ROLE_ACTIONS[action] || [];
+    return !!role && allowed.includes(role);
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        systemRole,
+        role,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        setActiveRole,
+        hasRole,
+        hasPermission,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -18,7 +18,8 @@ from app.models.zakat_calculation import ZakatCalculation
 from app.models.company import Company
 from app.services.zakat_service import ZakatService
 from app.rules.engine import RuleEngine
-from app.core.security import get_current_company_id
+from app.core.security import get_active_company_id, require_company_roles
+from app.models.user_company import CompanyRole
 
 router = APIRouter()
 
@@ -49,7 +50,8 @@ def get_rule_engine(request: Request) -> RuleEngine:
 async def start_calculation(
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Create or resume a draft calculation for the current company (from session)."""
     try:
@@ -101,7 +103,8 @@ async def add_or_update_item(
     item_id: Optional[int] = Query(None, description="ID of existing item to update"),
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Add or update a financial item in a draft calculation. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
@@ -121,7 +124,8 @@ async def recalculate(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Recalculate zakat for a draft calculation. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
@@ -155,7 +159,8 @@ async def finalize(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Finalize a draft calculation (makes it read-only). Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
@@ -174,7 +179,12 @@ async def finalize(
 @router.get("/calculations", response_model=CalculationListResponse)
 async def list_calculations(
     db: Session = Depends(get_db),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(
+        CompanyRole.ACCOUNTANT,
+        CompanyRole.OWNER,
+        CompanyRole.SHARIA_AUDITOR,
+    )),
+    company_id: int = Depends(get_active_company_id),
 ):
     """List all zakat calculations for the current company (drafts + finalized)."""
     try:
@@ -213,7 +223,12 @@ async def get_calculation(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(
+        CompanyRole.ACCOUNTANT,
+        CompanyRole.OWNER,
+        CompanyRole.SHARIA_AUDITOR,
+    )),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Get a calculation with rules and items. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
@@ -231,7 +246,8 @@ async def link_item_to_calculation(
     amount: Optional[Decimal] = Query(None, description="Override amount (optional)"),
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Link an existing financial item to a calculation. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
@@ -251,7 +267,8 @@ async def remove_item_from_calculation(
     item_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Remove a financial item from a calculation. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
@@ -270,7 +287,8 @@ async def create_revision(
     calculation_id: int,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
-    company_id: int = Depends(get_current_company_id),
+    membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    company_id: int = Depends(get_active_company_id),
 ):
     """Create a revision (clone) of a finalized calculation. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)

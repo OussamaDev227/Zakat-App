@@ -29,7 +29,7 @@ export default function LoginPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,17 +43,16 @@ export default function LoginPage() {
     setError('');
     setIsSubmitting(true);
 
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError(t('error_credentials_required'));
       setIsSubmitting(false);
       return;
     }
 
-    const success = login(username.trim(), password.trim());
-
-    if (success) {
+    try {
+      await login(email.trim(), password.trim());
       navigate('/companies', { replace: true });
-    } else {
+    } catch {
       setError(t('error_invalid_credentials'));
       setIsSubmitting(false);
     }
@@ -160,20 +159,20 @@ export default function LoginPage() {
                   )}
 
                   <div className="space-y-1.5">
-                    <label htmlFor="username" className="block text-sm font-bold text-gray-900">
+                    <label htmlFor="email" className="block text-sm font-bold text-gray-900">
                       {t('username')}
                     </label>
                     <input
-                      id="username"
-                      type="text"
-                      value={username}
+                      id="email"
+                      type="email"
+                      value={email}
                       onChange={(e) => {
-                        setUsername(e.target.value);
+                        setEmail(e.target.value);
                         setError('');
                       }}
                       className="input-field bg-blue-50/50 border-blue-100 focus:bg-white"
-                      placeholder={t('placeholder_username')}
-                      autoComplete="username"
+                      placeholder="user@example.com"
+                      autoComplete="email"
                       disabled={isSubmitting}
                     />
                   </div>

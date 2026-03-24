@@ -1,0 +1,58 @@
+@startuml use_case_diagram
+' Use Case Diagram - Smart Decision Support System for Corporate Zakat Calculation
+' Purpose: Shows three actors (Accountant, Company Owner, System Administrator) and
+' all business use cases. Suitable for academic software engineering documentation.
+' System boundary: Zakat Decision Support System.
+
+title Use Case Diagram - Zakat Decision Support System
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Accountant" as Accountant
+actor "Company Owner" as Owner
+actor "System Administrator" as Admin
+
+rectangle "Zakat Decision Support System" {
+  usecase "Authenticate" as UC_Authenticate
+  usecase "Select Company" as UC_SelectCompany
+  usecase "Manage Companies" as UC_ManageCompanies
+  usecase "Manage Financial Items" as UC_ManageFinancialItems
+  usecase "View Rules" as UC_ViewRules
+  usecase "Calculate Zakat" as UC_CalculateZakat
+  usecase "View Calculation History" as UC_ViewHistory
+  usecase "Import from Excel" as UC_ImportExcel
+  usecase "Generate Report" as UC_GenerateReport
+  usecase "Select Language" as UC_SelectLanguage
+  usecase "View Methodology" as UC_ViewMethodology
+}
+
+' System Administrator: system-level access and company CRUD
+Admin --> UC_Authenticate
+Admin --> UC_ManageCompanies
+
+' Company Owner: full company-scoped operations
+Owner --> UC_Authenticate
+Owner --> UC_SelectCompany
+Owner --> UC_ManageFinancialItems
+Owner --> UC_ViewRules
+Owner --> UC_CalculateZakat
+Owner --> UC_ViewHistory
+Owner --> UC_ImportExcel
+Owner --> UC_GenerateReport
+Owner --> UC_SelectLanguage
+Owner --> UC_ViewMethodology
+
+' Accountant: operational use cases (same as Owner in this system)
+Accountant --> UC_Authenticate
+Accountant --> UC_SelectCompany
+Accountant --> UC_ManageFinancialItems
+Accountant --> UC_ViewRules
+Accountant --> UC_CalculateZakat
+Accountant --> UC_ViewHistory
+Accountant --> UC_ImportExcel
+Accountant --> UC_GenerateReport
+Accountant --> UC_SelectLanguage
+Accountant --> UC_ViewMethodology
+
+@enduml

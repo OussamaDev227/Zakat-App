@@ -34,6 +34,7 @@ class Company(Base):
     language = Column(String(10), nullable=False, default="ar", server_default="ar")  # UI language: ar, fr, en
 
     # Relationships
+    memberships = relationship("UserCompany", back_populates="company", cascade="all, delete-orphan")
     financial_items = relationship("FinancialItem", back_populates="company", cascade="all, delete-orphan")
     zakat_calculations = relationship("ZakatCalculation", back_populates="company", cascade="all, delete-orphan")
 

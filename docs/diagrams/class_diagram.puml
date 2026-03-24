@@ -1,0 +1,135 @@
+@startuml class_diagram
+' Class Diagram - Smart Decision Support System for Corporate Zakat Calculation
+' Purpose: Shows core domain entities (persistent models) and their attributes and
+' relationships. RuleEngine is a domain service; rules are loaded from JSON (Ruleset).
+' Suitable for academic software engineering documentation.
+
+title Class Diagram - Zakat Decision Support System (Domain Model)
+
+' Enumerations
+enum UserRole {
+  ACCOUNTANT
+  OWNER
+  ADMIN
+}
+
+enum ItemCategory {
+  ASSET
+  LIABILITY
+  EQUITY
+}
+
+enum CalculationStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum LegalType {
+  LLC
+  SOLE_PROPRIETORSHIP
+}
+
+enum AssetType {
+  CASH
+  TRADING_GOODS
+  PRODUCTION_INVENTORY
+  RECEIVABLE
+  FIXED_ASSET
+  INTANGIBLE_ASSET
+  LONG_TERM_INVESTMENT
+}
+
+' Persistent domain entities
+class User {
+  id : Integer
+  name : String
+  email : String
+  role : UserRole
+}
+
+class Company {
+  id : Integer
+  name : String
+  legal_type : LegalType
+  fiscal_year_start : Date
+  fiscal_year_end : Date
+  company_password_hash : String
+  zakat_nisab_value : Decimal
+  language : String
+}
+
+class FinancialItem {
+  id : Integer
+  company_id : Integer
+  name : String
+  category : ItemCategory
+  asset_type : AssetType
+  accounting_label : String
+  liability_code : String
+  equity_code : String
+  amount : Decimal
+  acquisition_date : Date
+  item_metadata : JSONB
+  calculation_id : Integer
+}
+
+class ZakatCalculation {
+  id : Integer
+  company_id : Integer
+  zakat_base : Decimal
+  zakat_amount : Decimal
+  status : CalculationStatus
+  created_at : DateTime
+  updated_at : DateTime
+  calculation_date : DateTime
+}
+
+class ZakatItemResult {
+  id : Integer
+  calculation_id : Integer
+  financial_item_id : Integer
+  included : Boolean
+  included_amount : Decimal
+  explanation_ar : String
+  rule_code : String
+  hawl_passed : Boolean
+}
+
+' Domain service (non-persistent)
+class RuleEngine {
+  load_rules(path : Path) : void
+  is_valid_asset_type(code) : Boolean
+  is_valid_liability_code(code) : Boolean
+  is_valid_equity_code(code) : Boolean
+  apply_rules(calculation_id) : void
+}
+
+class Ruleset <<conceptual>> {
+  assets : List
+  liabilities : List
+  equity : List
+  extended_rules : Object
+}
+
+' Relationships
+
+' Conceptual association (not in database): the system uses a company password to
+' access company data; users are not persisted as owners of companies. This
+' relation represents the interaction flow only (user selects a company in the app).
+User --> Company : selects
+
+Company "1" -- "*" FinancialItem : has >
+Company "1" -- "*" ZakatCalculation : has >
+
+FinancialItem "*" -- "0..1" ZakatCalculation : linked to >
+FinancialItem "1" -- "*" ZakatItemResult : produces >
+
+ZakatCalculation "1" -- "*" ZakatItemResult : contains >
+ZakatCalculation "*" -- "1" Company : belongs to >
+
+ZakatItemResult "*" -- "1" ZakatCalculation : belongs to >
+ZakatItemResult "*" -- "1" FinancialItem : refers to >
+
+RuleEngine ..> Ruleset : uses
+
+@enduml

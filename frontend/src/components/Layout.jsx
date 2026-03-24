@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
+import { useAuth } from '../contexts/AuthContext';
 import { getPrimaryReference } from '../config/academicReferences';
 import { updateCompanyLanguage } from '../api/companies';
 import FlagIcon from './FlagIcon';
@@ -22,6 +23,7 @@ export default function Layout({ children }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const { activeCompany, setActiveCompany } = useCompany();
+  const { hasPermission, logout } = useAuth();
   const primaryRef = getPrimaryReference();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -38,13 +40,15 @@ export default function Layout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const currentFlag = <FlagIcon langCode={currentLangCode} size={28} />;
+
   const navItems = [
-    { path: '/companies', labelKey: 'nav_companies' },
-    { path: '/financial-items', labelKey: 'nav_financial_items' },
-    { path: '/zakat', labelKey: 'nav_zakat' },
-    { path: '/history', labelKey: 'nav_history' },
+    { path: '/companies', labelKey: 'nav_companies', visible: true },
+    { path: '/financial-items', labelKey: 'nav_financial_items', visible: hasPermission('viewReports') },
+    { path: '/zakat', labelKey: 'nav_zakat', visible: hasPermission('viewReports') },
+    { path: '/history', labelKey: 'nav_history', visible: hasPermission('viewReports') },
     { path: '/about-methodology', labelKey: 'nav_methodology' },
-  ];
+  ].filter((item) => item.visible !== false);
 
   async function handleLanguageChange(lang) {
     setLangDropdownOpen(false);
@@ -126,6 +130,13 @@ export default function Layout({ children }) {
                   </Link>
                 </>
               )}
+              <button
+                type="button"
+                onClick={logout}
+                className="text-xs sm:text-sm text-white font-bold underline hover:text-yellow-200"
+              >
+                {t('logout')}
+              </button>
             </div>
           </div>
         </div>

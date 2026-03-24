@@ -15,11 +15,14 @@ import {
   deleteCompany,
 } from '../api/companies';
 import { useCompany } from '../contexts/CompanyContext';
+import { useAuth } from '../contexts/AuthContext';
 import CompanyForm from '../components/CompanyForm';
 import CompanyPasswordModal from '../components/CompanyPasswordModal';
 
 export default function CompaniesPage() {
   const { t } = useTranslation();
+  const { hasPermission } = useAuth();
+  const canManageCompanies = hasPermission('manageCompanies');
   const {
     activeCompany,
     hasCompanySession,
@@ -166,16 +169,18 @@ export default function CompaniesPage() {
               {t('switch_company')}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              setEditingCompany(null);
-              setShowForm(true);
-            }}
-            className="btn-primary text-base sm:text-lg w-full sm:w-auto"
-          >
-            + {t('add_company_new')}
-          </button>
+          {canManageCompanies && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingCompany(null);
+                setShowForm(true);
+              }}
+              className="btn-primary text-base sm:text-lg w-full sm:w-auto"
+            >
+              + {t('add_company_new')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -231,25 +236,27 @@ export default function CompaniesPage() {
                       {new Date(currentCompanyDetail.fiscal_year_end).toLocaleDateString('en-US')}
                     </td>
                     <td>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingCompany(currentCompanyDetail);
-                            setShowForm(true);
-                          }}
-                          className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
-                        >
-                          {t('edit')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(currentCompanyDetail.id)}
-                          className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
-                        >
-                          {t('delete')}
-                        </button>
-                      </div>
+                      {canManageCompanies && (
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCompany(currentCompanyDetail);
+                              setShowForm(true);
+                            }}
+                            className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
+                          >
+                            {t('edit')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(currentCompanyDetail.id)}
+                            className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
+                          >
+                            {t('delete')}
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 </tbody>

@@ -1,0 +1,43 @@
+@startuml sequence_add_financial_item
+' Sequence Diagram - Add Financial Item
+' Purpose: Shows the business workflow when an authenticated user with an active
+' company session creates a new financial item. Covers validation (company, duplicate
+' check, rule codes) and persistence. Actor: Accountant. Academic documentation.
+
+title Sequence Diagram - Add Financial Item
+
+actor "Accountant" as User
+participant "FinancialItemForm" as Form
+participant "Financial Items API" as API
+participant "Validators" as Validators
+participant "RuleEngine" as RuleEngine
+database "DB" as DB
+
+User -> Form : Fill form (name, category, asset_type/liability_code/equity_code, amount, ...)
+User -> Form : Submit
+Form -> API : POST /financial-items\nBearer company_token\n{ item_data }
+
+API -> API : get_current_company_id (from JWT)
+API -> DB : Load Company by company_id
+DB --> API : Company
+alt Company not found
+  API --> Form : 404 Company not found
+else Company valid
+  API -> Validators : find_duplicate_financial_items(company_id, name)
+  Validators -> DB : Query existing items
+  DB --> Validators : Items
+  Validators --> API : Duplicate result
+  alt Duplicate detected
+    API --> Form : 409 Conflict (duplicate)
+  else No duplicate
+    API -> RuleEngine : is_valid_asset_type / is_valid_liability_code / is_valid_equity_code
+    RuleEngine --> API : valid
+    API -> DB : Create FinancialItem (company_id, ...)
+    DB --> API : FinancialItem
+    API -> DB : commit
+    API --> Form : 201 FinancialItemResponse
+    Form --> User : Show success, refresh list
+  end
+end
+
+@enduml

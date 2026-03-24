@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '../contexts/CompanyContext';
+import { useAuth } from '../contexts/AuthContext';
 import {
   getFinancialItems,
   createFinancialItem,
@@ -19,6 +20,9 @@ import ExcelUploadForm from '../components/ExcelUploadForm';
 
 export default function FinancialItemsPage() {
   const { t } = useTranslation();
+  const { hasPermission } = useAuth();
+  const canManageFinancialItems = hasPermission('manageFinancialItems');
+  const canImportExcel = hasPermission('importExcel');
   const { activeCompany } = useCompany();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -87,15 +91,19 @@ export default function FinancialItemsPage() {
           <p className="text-sm sm:text-base text-gray-600">{t('add_edit_items_intro')}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <button 
-            onClick={() => setShowExcelUpload(true)} 
-            className="btn-secondary text-base sm:text-lg w-full sm:w-auto"
-          >
-            📊 {t('excel_import')}
-          </button>
-          <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
-            + {t('add_financial_item')}
-          </button>
+          {canImportExcel && (
+            <button
+              onClick={() => setShowExcelUpload(true)}
+              className="btn-secondary text-base sm:text-lg w-full sm:w-auto"
+            >
+              📊 {t('excel_import')}
+            </button>
+          )}
+          {canManageFinancialItems && (
+            <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
+              + {t('add_financial_item')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -132,11 +140,11 @@ export default function FinancialItemsPage() {
       ) : (
         <FinancialItemsTable
           items={items}
-          onEdit={(item) => {
+          onEdit={canManageFinancialItems ? (item) => {
             setEditingItem(item);
             setShowForm(true);
-          }}
-          onDelete={handleDelete}
+          } : undefined}
+          onDelete={canManageFinancialItems ? handleDelete : undefined}
         />
       )}
     </div>

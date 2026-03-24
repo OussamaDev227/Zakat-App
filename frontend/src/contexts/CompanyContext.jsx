@@ -9,9 +9,11 @@
  */
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getCompanyToken, clearCompanyToken } from '../api/authStore';
+import { getUserToken } from '../api/authStore';
 import * as authApi from '../api/auth';
+import { getCompaniesMinimal } from '../api/companies';
 import i18n from '../i18n';
+import { useAuth } from './AuthContext';
 
 const SUPPORTED_LANGS = ['ar', 'fr', 'en'];
 
@@ -29,38 +31,47 @@ function applyLanguage(lang) {
 const CompanyContext = createContext(null);
 
 export function CompanyProvider({ children }) {
+  const { setActiveRole } = useAuth();
   const [activeCompany, setActiveCompany] = useState(null);
   const [restoring, setRestoring] = useState(true);
 
   const clearCompanySession = useCallback(() => {
-    clearCompanyToken();
+    // Keep user token; clear active company view in state.
     setActiveCompany(null);
-  }, []);
+    setActiveRole(null);
+  }, [setActiveRole]);
 
   const selectCompany = useCallback(async (companyId, password) => {
     const data = await authApi.selectCompany(companyId, password);
     setActiveCompany(data.company);
+    setActiveRole(data.company?.role || null);
     if (data.company?.language) {
       applyLanguage(data.company.language);
     }
     return data;
-  }, []);
+  }, [setActiveRole]);
 
   useEffect(() => {
-    const token = getCompanyToken();
+    const token = getUserToken();
     if (!token) {
       setRestoring(false);
       return;
     }
     authApi.getCurrentCompany()
-      .then((company) => {
+      .then(async (company) => {
         setActiveCompany(company);
+        try {
+          const memberships = await getCompaniesMinimal();
+          const matched = memberships.find((c) => c.id === company.id);
+          setActiveRole(matched?.role || null);
+        } catch {
+          setActiveRole(null);
+        }
         if (company?.language) {
           applyLanguage(company.language);
         }
       })
       .catch(() => {
-        clearCompanyToken();
         setActiveCompany(null);
       })
       .finally(() => {
