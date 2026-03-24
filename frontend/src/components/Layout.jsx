@@ -49,6 +49,7 @@ export default function Layout({ children }) {
   }, []);
 
   const navItems = [
+    { path: '/dashboard', labelKey: 'nav_dashboard', visible: systemRole === 'ADMIN' || hasRole('OWNER') },
     { path: '/companies', labelKey: 'nav_companies', visible: true },
     { path: '/admin/users', labelKey: 'nav_admin', visible: systemRole === 'ADMIN' },
     { path: '/financial-items', labelKey: 'nav_financial_items', visible: hasPermission('viewReports') },

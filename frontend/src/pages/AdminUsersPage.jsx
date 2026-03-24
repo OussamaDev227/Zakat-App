@@ -29,6 +29,19 @@ export default function AdminUsersPage() {
 
   const userOptions = useMemo(() => users.map((u) => ({ value: String(u.id), label: `${u.name} (${u.email})` })), [users]);
 
+  function formatSystemRole(role) {
+    if (role === 'ADMIN') return t('role_system_admin');
+    if (role === 'USER') return t('role_system_user');
+    return role;
+  }
+
+  function formatCompanyRole(role) {
+    if (role === 'ACCOUNTANT') return t('role_company_accountant');
+    if (role === 'OWNER') return t('role_company_owner');
+    if (role === 'SHARIA_AUDITOR') return t('role_company_sharia_auditor');
+    return role;
+  }
+
   async function loadData() {
     try {
       setLoading(true);
@@ -165,8 +178,8 @@ export default function AdminUsersPage() {
               onChange={(e) => setCreateForm((p) => ({ ...p, system_role: e.target.value }))}
               disabled={createLoading}
             >
-              <option value="USER">USER</option>
-              <option value="ADMIN">ADMIN</option>
+              <option value="USER">{t('role_system_user')}</option>
+              <option value="ADMIN">{t('role_system_admin')}</option>
             </select>
             <button type="submit" className="btn-primary w-full" disabled={createLoading}>
               {createLoading ? t('admin_creating') : t('admin_create_user_btn')}
@@ -207,9 +220,9 @@ export default function AdminUsersPage() {
               onChange={(e) => setAssignForm((p) => ({ ...p, role: e.target.value }))}
               disabled={assignLoading}
             >
-              <option value="ACCOUNTANT">ACCOUNTANT</option>
-              <option value="OWNER">OWNER</option>
-              <option value="SHARIA_AUDITOR">SHARIA_AUDITOR</option>
+              <option value="ACCOUNTANT">{t('role_company_accountant')}</option>
+              <option value="OWNER">{t('role_company_owner')}</option>
+              <option value="SHARIA_AUDITOR">{t('role_company_sharia_auditor')}</option>
             </select>
             <button type="submit" className="btn-primary w-full" disabled={assignLoading}>
               {assignLoading ? t('admin_assigning') : t('admin_assign_btn')}
@@ -244,7 +257,7 @@ export default function AdminUsersPage() {
                   <td>{u.id}</td>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
-                  <td><span className="badge">{u.system_role}</span></td>
+                  <td><span className="badge">{formatSystemRole(u.system_role)}</span></td>
                   <td>
                     <span className={`badge ${u.is_active ? 'badge-success' : 'badge-danger'}`}>
                       {u.is_active ? t('admin_status_active') : t('admin_status_inactive')}
@@ -273,7 +286,7 @@ export default function AdminUsersPage() {
                         {u.memberships.map((m) => (
                           <div key={`${u.id}-${m.company_id}`} className="flex items-center gap-2 text-sm">
                             <span>{t('admin_company_label', { id: m.company_id })}</span>
-                            <span className="badge">{m.role}</span>
+                            <span className="badge">{formatCompanyRole(m.role)}</span>
                             <button
                               className="text-red-700 hover:text-red-900 font-semibold"
                               disabled={removeLoadingKey === `${m.company_id}-${u.id}`}

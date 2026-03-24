@@ -27,11 +27,14 @@ import ZakatPage from './pages/ZakatPage';
 import ZakatHistoryPage from './pages/ZakatHistoryPage';
 import ZakatCalculationDetailPage from './pages/ZakatCalculationDetailPage';
 import AboutMethodologyPage from './pages/AboutMethodologyPage';
+import DashboardPage from './pages/DashboardPage';
+import { useCompany } from './contexts/CompanyContext';
 
 // Component to handle root redirect based on auth status
 function RootRedirect() {
   const { t, i18n } = useTranslation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, systemRole, role } = useAuth();
+  const { hasCompanySession } = useCompany();
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
   if (isLoading) {
@@ -42,7 +45,16 @@ function RootRedirect() {
     );
   }
 
-  return <Navigate to={isAuthenticated ? "/companies" : "/login"} replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  if (systemRole === 'ADMIN') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  if (role === 'OWNER' && hasCompanySession) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Navigate to="/companies" replace />;
 }
 
 function App() {
@@ -63,6 +75,7 @@ function App() {
                     <Layout>
                       <Routes>
                         <Route path="/" element={<RootRedirect />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
                         <Route path="/companies" element={<CompaniesPage />} />
                         <Route path="/admin/users" element={<AdminRouteGuard><AdminUsersPage /></AdminRouteGuard>} />
                         <Route path="/financial-items" element={<CompanyRouteGuard><FinancialItemsPage /></CompanyRouteGuard>} />

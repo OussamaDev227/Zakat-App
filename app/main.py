@@ -12,7 +12,7 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.user import SystemRole, User
 from app.rules.engine import RuleEngine
-from app.api.routes import companies, financial_items, zakat, rules, lookups, excel_upload, auth, users
+from app.api.routes import companies, financial_items, zakat, rules, lookups, excel_upload, auth, users, dashboard
 
 
 def _log_request(request: Request):
@@ -130,6 +130,7 @@ app.include_router(companies.router, prefix="/companies", tags=["companies"])
 app.include_router(financial_items.router, prefix="/financial-items", tags=["financial-items"])
 app.include_router(zakat.router, prefix="/zakat", tags=["zakat"])
 app.include_router(excel_upload.router, prefix="/zakat", tags=["zakat"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 app.include_router(rules.router, prefix="/rules", tags=["rules"])
 app.include_router(lookups.router, prefix="/lookups", tags=["lookups"])
 
