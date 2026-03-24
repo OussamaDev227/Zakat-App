@@ -28,6 +28,7 @@ import ZakatHistoryPage from './pages/ZakatHistoryPage';
 import ZakatCalculationDetailPage from './pages/ZakatCalculationDetailPage';
 import AboutMethodologyPage from './pages/AboutMethodologyPage';
 import DashboardPage from './pages/DashboardPage';
+import AuditLogPage from './pages/AuditLogPage';
 import { useCompany } from './contexts/CompanyContext';
 
 // Component to handle root redirect based on auth status
@@ -82,6 +83,7 @@ function App() {
                         <Route path="/zakat" element={<CompanyRouteGuard><ZakatPage /></CompanyRouteGuard>} />
                         <Route path="/history" element={<CompanyRouteGuard><ZakatHistoryPage /></CompanyRouteGuard>} />
                         <Route path="/history/:id" element={<CompanyRouteGuard><ZakatCalculationDetailPage /></CompanyRouteGuard>} />
+                        <Route path="/audit-logs" element={<CompanyRouteGuard><AuditLogPage /></CompanyRouteGuard>} />
                         <Route path="/about-methodology" element={<AboutMethodologyPage />} />
                       </Routes>
                     </Layout>

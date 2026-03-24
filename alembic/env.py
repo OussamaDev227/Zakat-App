@@ -9,7 +9,7 @@ from app.db.base import Base
 from app.core.config import settings
 
 # Import all models so Alembic can detect them
-from app.models import User, UserCompany, Company, FinancialItem, ZakatCalculation, ZakatItemResult
+from app.models import User, UserCompany, Company, FinancialItem, ZakatCalculation, ZakatItemResult, AuditLog
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

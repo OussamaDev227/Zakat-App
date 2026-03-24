@@ -15,8 +15,11 @@ from app.models.financial_item import FinancialItem, ItemCategory, AssetType
 from app.models.company import Company
 from app.rules.engine import RuleEngine
 from app.validators.financial_item_validators import find_duplicate_financial_items
-from app.core.security import get_active_company_id, require_company_roles
+from app.core.security import get_active_company_id, get_current_user, require_company_roles
 from app.models.user_company import CompanyRole
+from app.models.user import User
+from app.models.audit_log import AuditAction, AuditEntityType
+from app.services.audit_log_service import AuditLogService
 
 router = APIRouter()
 
@@ -26,12 +29,27 @@ def get_rule_engine(request: Request) -> RuleEngine:
     return request.app.state.rule_engine
 
 
+def _item_snapshot(item: FinancialItem) -> dict:
+    return {
+        "name": item.name,
+        "category": item.category,
+        "asset_type": item.asset_type,
+        "accounting_label": item.accounting_label,
+        "liability_code": item.liability_code,
+        "equity_code": item.equity_code,
+        "amount": item.amount,
+        "acquisition_date": item.acquisition_date,
+        "metadata": item.item_metadata or {},
+    }
+
+
 @router.post("", response_model=FinancialItemResponse, status_code=201)
 async def create_financial_item(
     item_data: FinancialItemCreate,
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Create a new financial item with rule code validation. Company is taken from session only."""
@@ -153,6 +171,18 @@ async def create_financial_item(
     
     db.commit()
     db.refresh(item)
+    audit_service = AuditLogService(db)
+    audit_service.log(
+        company_id=company_id,
+        actor_user=current_user,
+        actor_company_role=membership.role.value if membership else None,
+        entity_type=AuditEntityType.FINANCIAL_ITEM,
+        entity_id=item.id,
+        action=AuditAction.CREATE,
+        summary=f"Created financial item '{item.name}'",
+        field_changes={"after": audit_service._normalize(_item_snapshot(item))},
+    )
+    db.commit()
     
     # Map item_metadata back to metadata for response
     return FinancialItemResponse.from_orm_with_metadata(item)
@@ -210,6 +240,7 @@ async def update_financial_item(
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Update a financial item with rule code validation. Only if it belongs to the current company."""
@@ -249,6 +280,8 @@ async def update_financial_item(
         if not rule_engine.is_valid_equity_code(item_data.equity_code):
             raise HTTPException(status_code=422, detail=f"Invalid equity_code: {item_data.equity_code}")
     
+    before = _item_snapshot(item)
+
     # Update fields (map metadata to item_metadata)
     update_dict = item_data.model_dump()
     update_dict['item_metadata'] = update_dict.pop('metadata', {})
@@ -269,6 +302,35 @@ async def update_financial_item(
     
     db.commit()
     db.refresh(item)
+    after = _item_snapshot(item)
+    audit_service = AuditLogService(db)
+    changes = audit_service.diff(
+        before,
+        after,
+        [
+            "name",
+            "category",
+            "asset_type",
+            "accounting_label",
+            "liability_code",
+            "equity_code",
+            "amount",
+            "acquisition_date",
+            "metadata",
+        ],
+    )
+    if changes:
+        audit_service.log(
+            company_id=company_id,
+            actor_user=current_user,
+            actor_company_role=membership.role.value if membership else None,
+            entity_type=AuditEntityType.FINANCIAL_ITEM,
+            entity_id=item.id,
+            action=AuditAction.UPDATE,
+            summary=f"Updated financial item '{item.name}'",
+            field_changes=changes,
+        )
+        db.commit()
     return FinancialItemResponse.from_orm_with_metadata(item)
 
 
@@ -277,6 +339,7 @@ async def delete_financial_item(
     item_id: int,
     db: Session = Depends(get_db),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Delete a financial item. Only if it belongs to the current company."""
@@ -285,6 +348,19 @@ async def delete_financial_item(
         raise HTTPException(status_code=404, detail="Financial item not found")
     if item.company_id != company_id:
         raise HTTPException(status_code=403, detail="Access denied to this item")
+    before = _item_snapshot(item)
+    item_name = item.name
+    audit_service = AuditLogService(db)
+    audit_service.log(
+        company_id=company_id,
+        actor_user=current_user,
+        actor_company_role=membership.role.value if membership else None,
+        entity_type=AuditEntityType.FINANCIAL_ITEM,
+        entity_id=item.id,
+        action=AuditAction.DELETE,
+        summary=f"Deleted financial item '{item_name}'",
+        field_changes={"before": audit_service._normalize(before)},
+    )
     db.delete(item)
     db.commit()
     return None

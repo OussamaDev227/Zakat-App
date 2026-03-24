@@ -26,8 +26,20 @@ from app.core.security import (
 )
 from app.schemas.user import CompanyUserAssignRequest, CompanyUserMembershipResponse
 from app.services.user_management_service import UserManagementService
+from app.models.audit_log import AuditAction, AuditEntityType
+from app.services.audit_log_service import AuditLogService
 
 router = APIRouter()
+
+def _company_snapshot(company: Company) -> dict:
+    return {
+        "name": company.name,
+        "legal_type": company.legal_type,
+        "fiscal_year_start": company.fiscal_year_start,
+        "fiscal_year_end": company.fiscal_year_end,
+        "zakat_nisab_value": company.zakat_nisab_value,
+        "language": company.language,
+    }
 
 
 @router.post("", response_model=CompanyResponse, status_code=201)
@@ -159,11 +171,24 @@ async def update_company_language(
     if company_id != session_company_id:
         raise HTTPException(status_code=403, detail="Access denied to this company")
     company = ensure_company_exists(db, company_id)
+    previous_language = company.language
     if body.language not in ("ar", "fr", "en"):
         raise HTTPException(status_code=400, detail="language must be one of: ar, fr, en")
     company.language = body.language
     db.commit()
     db.refresh(company)
+    audit_service = AuditLogService(db)
+    audit_service.log(
+        company_id=company.id,
+        actor_user=_current_admin,
+        actor_company_role=None,
+        entity_type=AuditEntityType.COMPANY,
+        entity_id=company.id,
+        action=AuditAction.UPDATE_LANGUAGE,
+        summary=f"Updated company language for '{company.name}'",
+        field_changes={"language": {"before": previous_language, "after": company.language}},
+    )
+    db.commit()
     return CompanyResponse.model_validate(company)
 
 
@@ -179,6 +204,7 @@ async def update_company(
     if company_id != session_company_id:
         raise HTTPException(status_code=403, detail="Access denied to this company")
     company = ensure_company_exists(db, company_id)
+    before = _company_snapshot(company)
     data = company_data.model_dump(exclude_unset=True)
     password = data.pop("password", None)
     for field, value in data.items():
@@ -187,6 +213,25 @@ async def update_company(
         company.company_password_hash = hash_company_password(password)
     db.commit()
     db.refresh(company)
+    after = _company_snapshot(company)
+    audit_service = AuditLogService(db)
+    changes = audit_service.diff(
+        before,
+        after,
+        ["name", "legal_type", "fiscal_year_start", "fiscal_year_end", "zakat_nisab_value", "language"],
+    )
+    if changes:
+        audit_service.log(
+            company_id=company.id,
+            actor_user=_current_admin,
+            actor_company_role=None,
+            entity_type=AuditEntityType.COMPANY,
+            entity_id=company.id,
+            action=AuditAction.UPDATE,
+            summary=f"Updated company '{company.name}' settings",
+            field_changes=changes,
+        )
+        db.commit()
     return CompanyResponse.model_validate(company)
 
 

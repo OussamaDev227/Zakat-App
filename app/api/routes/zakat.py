@@ -18,8 +18,11 @@ from app.models.zakat_calculation import ZakatCalculation
 from app.models.company import Company
 from app.services.zakat_service import ZakatService
 from app.rules.engine import RuleEngine
-from app.core.security import get_active_company_id, require_company_roles
+from app.core.security import get_active_company_id, get_current_user, require_company_roles
 from app.models.user_company import CompanyRole
+from app.models.user import User
+from app.models.audit_log import AuditAction, AuditEntityType
+from app.services.audit_log_service import AuditLogService
 
 router = APIRouter()
 
@@ -51,6 +54,7 @@ async def start_calculation(
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Create or resume a draft calculation for the current company (from session)."""
@@ -68,6 +72,22 @@ async def start_calculation(
         
         # Return calculation with existing items and rules (if any)
         response = service.get_calculation_with_rules(calculation.id)
+        audit_service = AuditLogService(db)
+        audit_service.log(
+            company_id=company_id,
+            actor_user=current_user,
+            actor_company_role=membership.role.value if membership else None,
+            entity_type=AuditEntityType.ZAKAT_CALCULATION,
+            entity_id=calculation.id,
+            action=AuditAction.START,
+            summary=f"Started or resumed calculation #{calculation.id}",
+            field_changes={
+                "status": {"before": None, "after": calculation.status.value},
+                "zakat_base": {"before": None, "after": calculation.zakat_base},
+                "zakat_amount": {"before": None, "after": calculation.zakat_amount},
+            },
+        )
+        db.commit()
         # #region agent log
         _log_backend("zakat.py:start_calculation:success", "start_calculation service succeeded", {"calculation_id": calculation.id, "status": calculation.status.value, "items_count": len(response.items)}, "H2")
         # #endregion
@@ -125,17 +145,36 @@ async def recalculate(
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Recalculate zakat for a draft calculation. Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
+        previous = db.query(ZakatCalculation).filter(ZakatCalculation.id == calculation_id).first()
+        before_base = previous.zakat_base if previous else None
+        before_amount = previous.zakat_amount if previous else None
         result = service.recalculate_calculation(calculation_id)
         db.commit()
-        
-        # Build response
         calculation = result["calculation"]
+        audit_service = AuditLogService(db)
+        audit_service.log(
+            company_id=company_id,
+            actor_user=current_user,
+            actor_company_role=membership.role.value if membership else None,
+            entity_type=AuditEntityType.ZAKAT_CALCULATION,
+            entity_id=calculation.id,
+            action=AuditAction.RECALCULATE,
+            summary=f"Recalculated calculation #{calculation.id}",
+            field_changes={
+                "zakat_base": {"before": before_base, "after": calculation.zakat_base},
+                "zakat_amount": {"before": before_amount, "after": calculation.zakat_amount},
+            },
+        )
+        db.commit()
+
+        # Build response
         return CalculationResponse(
             calculation_id=calculation.id,
             company_id=calculation.company_id,
@@ -160,13 +199,32 @@ async def finalize(
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Finalize a draft calculation (makes it read-only). Calculation must belong to current company."""
     _ensure_calculation_belongs_to_company(db, calculation_id, company_id)
     try:
         service = ZakatService(db, rule_engine)
+        existing = db.query(ZakatCalculation).filter(ZakatCalculation.id == calculation_id).first()
+        before_status = existing.status.value if existing else None
         service.finalize_calculation(calculation_id)
+        db.commit()
+        finalized = db.query(ZakatCalculation).filter(ZakatCalculation.id == calculation_id).first()
+        audit_service = AuditLogService(db)
+        audit_service.log(
+            company_id=company_id,
+            actor_user=current_user,
+            actor_company_role=membership.role.value if membership else None,
+            entity_type=AuditEntityType.ZAKAT_CALCULATION,
+            entity_id=calculation_id,
+            action=AuditAction.FINALIZE,
+            summary=f"Finalized calculation #{calculation_id}",
+            field_changes={
+                "status": {"before": before_status, "after": finalized.status.value if finalized else "FINALIZED"},
+                "calculation_date": {"before": None, "after": finalized.calculation_date if finalized else None},
+            },
+        )
         db.commit()
         
         # Return finalized calculation with rules
@@ -288,6 +346,7 @@ async def create_revision(
     db: Session = Depends(get_db),
     rule_engine: RuleEngine = Depends(get_rule_engine),
     membership=Depends(require_company_roles(CompanyRole.ACCOUNTANT)),
+    current_user: User = Depends(get_current_user),
     company_id: int = Depends(get_active_company_id),
 ):
     """Create a revision (clone) of a finalized calculation. Calculation must belong to current company."""
@@ -295,6 +354,21 @@ async def create_revision(
     try:
         service = ZakatService(db, rule_engine)
         new_calculation = service.create_revision(calculation_id)
+        db.commit()
+        audit_service = AuditLogService(db)
+        audit_service.log(
+            company_id=company_id,
+            actor_user=current_user,
+            actor_company_role=membership.role.value if membership else None,
+            entity_type=AuditEntityType.ZAKAT_CALCULATION,
+            entity_id=new_calculation.id,
+            action=AuditAction.CREATE_REVISION,
+            summary=f"Created revision #{new_calculation.id} from calculation #{calculation_id}",
+            field_changes={
+                "source_calculation_id": {"before": None, "after": calculation_id},
+                "new_calculation_id": {"before": None, "after": new_calculation.id},
+            },
+        )
         db.commit()
         return service.get_calculation_with_rules(new_calculation.id)
     except ValueError as e:

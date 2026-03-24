@@ -55,6 +55,7 @@ export default function Layout({ children }) {
     { path: '/financial-items', labelKey: 'nav_financial_items', visible: hasPermission('viewReports') },
     { path: '/zakat', labelKey: 'nav_zakat', visible: hasPermission('viewReports') },
     { path: '/history', labelKey: 'nav_history', visible: hasPermission('viewReports') },
+    { path: '/audit-logs', labelKey: 'nav_audit_logs', visible: systemRole === 'ADMIN' || hasRole('OWNER') },
     { path: '/about-methodology', labelKey: 'nav_methodology' },
   ].filter((item) => item.visible !== false);
 
