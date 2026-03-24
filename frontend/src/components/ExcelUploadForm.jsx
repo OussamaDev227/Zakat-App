@@ -16,6 +16,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
   const [validatedRows, setValidatedRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importAction, setImportAction] = useState('');
   const [error, setError] = useState(null);
   const [importResults, setImportResults] = useState(null);
   const fileInputRef = useRef(null);
@@ -218,6 +219,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
     }
 
     setImporting(true);
+    setImportAction('create_and_calculate');
     setError(null);
 
     try {
@@ -238,6 +240,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
       setError(`فشل الإنشاء والحساب: ${err.message}`);
     } finally {
       setImporting(false);
+      setImportAction('');
     }
   }
 
@@ -261,6 +264,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
     }
 
     setImporting(true);
+    setImportAction('calculate_only');
     setError(null);
 
     try {
@@ -277,6 +281,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
       setError(`فشل الحساب: ${err.message}`);
     } finally {
       setImporting(false);
+      setImportAction('');
     }
   }
 
@@ -424,6 +429,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
                           <select
                             value={row.categoryCode || ''}
                             onChange={(e) => handleRowChange(index, 'categoryCode', e.target.value)}
+                            disabled={importing}
                             className={`w-full px-2 py-1 border rounded text-sm ${
                               !row.categoryCode || row.categoryCode.trim() === ''
                                 ? 'border-yellow-400 bg-yellow-50'
@@ -450,6 +456,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
                               const value = e.target.value === '' ? null : parseFloat(e.target.value);
                               handleRowChange(index, 'amount', value);
                             }}
+                            disabled={importing}
                             className={`w-full px-2 py-1 border rounded text-sm text-right ${
                               row.amount === null || row.amount === undefined || 
                               (typeof row.amount === 'number' && (isNaN(row.amount) || row.amount < 0))
@@ -465,6 +472,7 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
                             type="text"
                             value={row.notes || ''}
                             onChange={(e) => handleRowChange(index, 'notes', e.target.value)}
+                            disabled={importing}
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-white"
                             placeholder="ملاحظات (اختياري)"
                           />
@@ -517,14 +525,14 @@ export default function ExcelUploadForm({ onImportComplete, onCancel }) {
                   className="btn-primary"
                   disabled={importing || validRows === 0}
                 >
-                  {importing ? 'جاري المعالجة...' : 'إنشاء البنود وحساب الزكاة'}
+                  {importing && importAction === 'create_and_calculate' ? 'جاري الإنشاء...' : 'إنشاء البنود وحساب الزكاة'}
                 </button>
                 <button
                   onClick={handleCalculateOnly}
                   className="btn-secondary"
                   disabled={importing || validRows === 0}
                 >
-                  {importing ? 'جاري الحساب...' : 'حساب الزكاة فقط'}
+                  {importing && importAction === 'calculate_only' ? 'جاري الحساب...' : 'حساب الزكاة فقط'}
                 </button>
               </>
             )}

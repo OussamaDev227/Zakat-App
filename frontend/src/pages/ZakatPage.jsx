@@ -48,6 +48,7 @@ export default function ZakatPage() {
   const [editingAmountItem, setEditingAmountItem] = useState(null);
   const [newAmount, setNewAmount] = useState('');
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [actionLoading, setActionLoading] = useState('');
 
   const calculationId = searchParams.get('calculation_id');
   const isDraft = calculation?.status === 'DRAFT';
@@ -126,6 +127,7 @@ export default function ZakatPage() {
     if (!calculation || !isDraft) return;
 
     try {
+      setActionLoading('recalculating');
       setLoading(true);
       setError(null);
       const updated = await recalculateCalculation(calculation.calculation_id);
@@ -133,6 +135,7 @@ export default function ZakatPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      setActionLoading('');
       setLoading(false);
     }
   }
@@ -149,6 +152,7 @@ export default function ZakatPage() {
     }
 
     try {
+      setActionLoading('finalizing');
       setLoading(true);
       setError(null);
       const finalized = await finalizeCalculation(calculation.calculation_id);
@@ -157,6 +161,7 @@ export default function ZakatPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      setActionLoading('');
       setLoading(false);
     }
   }
@@ -165,6 +170,7 @@ export default function ZakatPage() {
     if (!calculation || !isFinalized) return;
 
     try {
+      setActionLoading('creating_revision');
       setLoading(true);
       setError(null);
       const newCalculation = await createRevision(calculation.calculation_id);
@@ -174,6 +180,7 @@ export default function ZakatPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      setActionLoading('');
       setLoading(false);
     }
   }
@@ -182,6 +189,7 @@ export default function ZakatPage() {
     if (!calculation || !isDraft) return;
 
     try {
+      setActionLoading(`linking_${financialItemId}`);
       setLoading(true);
       setError(null);
       const updated = await linkItemToCalculation(
@@ -194,6 +202,7 @@ export default function ZakatPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      setActionLoading('');
       setLoading(false);
     }
   }
@@ -206,6 +215,7 @@ export default function ZakatPage() {
     }
 
     try {
+      setActionLoading(`removing_${itemId}`);
       setLoading(true);
       setError(null);
       const updated = await removeItemFromCalculation(calculation.calculation_id, itemId);
@@ -213,6 +223,7 @@ export default function ZakatPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      setActionLoading('');
       setLoading(false);
     }
   }
@@ -233,6 +244,7 @@ export default function ZakatPage() {
     }
 
     try {
+      setActionLoading(`saving_amount_${editingAmountItem.id}`);
       setLoading(true);
       setError(null);
       // Find the item to get its details
@@ -268,6 +280,7 @@ export default function ZakatPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      setActionLoading('');
       setLoading(false);
     }
   }
@@ -389,14 +402,14 @@ export default function ZakatPage() {
                       disabled={loading || calculation.items.length === 0}
                       className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                     >
-                      {t('recalculate')}
+                      {actionLoading === 'recalculating' ? t('updating') : t('recalculate')}
                     </button>
                     <button
                       onClick={handleFinalize}
                       disabled={loading || calculation.items.length === 0}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                     >
-                      {t('finalize_calculation')}
+                      {actionLoading === 'finalizing' ? t('updating') : t('finalize_calculation')}
                     </button>
                   </>
                 )}
@@ -406,7 +419,7 @@ export default function ZakatPage() {
                     disabled={loading}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                   >
-                    {t('create_revision')}
+                    {actionLoading === 'creating_revision' ? t('creating') : t('create_revision')}
                   </button>
                 )}
                 {false && (
@@ -430,6 +443,7 @@ export default function ZakatPage() {
             {isDraft && canRunCalculations && (
               <button
                 onClick={() => setShowItemSelector(true)}
+                disabled={loading}
                 className="btn-primary w-full sm:w-auto text-sm sm:text-base"
               >
                 ➕ {t('add_existing_item')}
@@ -445,6 +459,7 @@ export default function ZakatPage() {
                 {isDraft && canRunCalculations && (
                   <button
                     onClick={() => setShowItemSelector(true)}
+                    disabled={loading}
                     className="btn-primary"
                   >
                     ➕ {t('add_existing_item')}
@@ -491,15 +506,17 @@ export default function ZakatPage() {
                             <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center">
                               <button
                                 onClick={() => handleEditAmount(item.item_id, item.original_amount || item.included_amount)}
+                                disabled={loading}
                                 className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                               >
-                                {t('edit_amount')}
+                                {actionLoading === `saving_amount_${item.item_id}` ? t('updating') : t('edit_amount')}
                               </button>
                               <button
                                 onClick={() => handleRemoveItem(item.item_id)}
+                                disabled={loading}
                                 className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                               >
-                                {t('delete')}
+                                {actionLoading === `removing_${item.item_id}` ? t('deleting') : t('delete')}
                               </button>
                             </div>
                           </td>
@@ -518,6 +535,7 @@ export default function ZakatPage() {
                   <h3 className="text-base sm:text-lg font-bold text-gray-900">{t('choose_item_to_add')}</h3>
                   <button
                     onClick={() => setShowItemSelector(false)}
+                    disabled={loading}
                     className="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label={t('close')}
                   >
@@ -538,9 +556,10 @@ export default function ZakatPage() {
                         </div>
                         <button
                           onClick={() => handleLinkItem(item.id)}
+                          disabled={loading}
                           className="btn-secondary text-xs sm:text-sm w-full sm:w-auto min-h-[44px] sm:min-h-0"
                         >
-                          {t('add')}
+                          {actionLoading === `linking_${item.id}` ? t('assigning') : t('add')}
                         </button>
                       </div>
                     ))}
@@ -559,6 +578,7 @@ export default function ZakatPage() {
                       setEditingAmountItem(null);
                       setNewAmount('');
                     }}
+                    disabled={loading}
                     className="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label={t('close')}
                   >
@@ -572,6 +592,7 @@ export default function ZakatPage() {
                       type="number"
                       value={newAmount}
                       onChange={(e) => setNewAmount(e.target.value)}
+                      disabled={loading}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[44px]"
                       min="0"
                       step="0.01"
@@ -583,13 +604,14 @@ export default function ZakatPage() {
                       className="btn-primary w-full sm:w-auto order-1 sm:order-1"
                       disabled={loading}
                     >
-                      {t('save')}
+                      {actionLoading.startsWith('saving_amount_') ? t('saving') : t('save')}
                     </button>
                     <button
                       onClick={() => {
                         setEditingAmountItem(null);
                         setNewAmount('');
                       }}
+                      disabled={loading}
                       className="btn-secondary w-full sm:w-auto order-2 sm:order-2"
                     >
                       {t('cancel')}

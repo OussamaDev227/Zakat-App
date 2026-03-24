@@ -29,6 +29,8 @@ export default function FinancialItemsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     if (activeCompany) {
@@ -55,6 +57,7 @@ export default function FinancialItemsPage() {
   async function handleSubmit(formData) {
     if (!activeCompany) return;
     try {
+      setSubmitting(true);
       if (editingItem) {
         await updateFinancialItem(editingItem.id, formData);
       } else {
@@ -65,6 +68,8 @@ export default function FinancialItemsPage() {
       setEditingItem(null);
     } catch (error) {
       alert(t('save_failed') + ': ' + error.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -74,10 +79,13 @@ export default function FinancialItemsPage() {
     }
 
     try {
+      setDeletingId(id);
       await deleteFinancialItem(id);
       await loadItems();
     } catch (error) {
       alert(t('delete_failed') + ': ' + error.message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -94,13 +102,14 @@ export default function FinancialItemsPage() {
           {canImportExcel && (
             <button
               onClick={() => setShowExcelUpload(true)}
+              disabled={submitting || !!deletingId || loading}
               className="btn-secondary text-base sm:text-lg w-full sm:w-auto"
             >
               📊 {t('excel_import')}
             </button>
           )}
           {canManageFinancialItems && (
-            <button onClick={() => setShowForm(true)} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
+            <button onClick={() => setShowForm(true)} disabled={submitting || !!deletingId || loading} className="btn-primary text-base sm:text-lg w-full sm:w-auto">
               + {t('add_financial_item')}
             </button>
           )}
@@ -127,6 +136,7 @@ export default function FinancialItemsPage() {
           <FinancialItemForm
             item={editingItem}
             onSubmit={handleSubmit}
+            submitting={submitting}
             onCancel={() => {
               setShowForm(false);
               setEditingItem(null);
@@ -145,6 +155,7 @@ export default function FinancialItemsPage() {
             setShowForm(true);
           } : undefined}
           onDelete={canManageFinancialItems ? handleDelete : undefined}
+          deletingId={deletingId}
         />
       )}
     </div>

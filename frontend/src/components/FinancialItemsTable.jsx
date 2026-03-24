@@ -19,7 +19,7 @@ function normalizeName(name) {
     .trim();
 }
 
-export default function FinancialItemsTable({ items, onEdit, onDelete }) {
+export default function FinancialItemsTable({ items, onEdit, onDelete, deletingId = null }) {
   const canEdit = typeof onEdit === 'function' && typeof onDelete === 'function';
   const { t } = useTranslation();
   const { rules } = useRules();
@@ -129,15 +129,17 @@ export default function FinancialItemsTable({ items, onEdit, onDelete }) {
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-end sm:items-center">
                       <button
                         onClick={() => onEdit(item)}
+                        disabled={deletingId === item.id}
                         className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                       >
                         {t('edit')}
                       </button>
                       <button
                         onClick={() => onDelete(item.id)}
+                        disabled={deletingId === item.id}
                         className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap min-h-[44px] sm:min-h-0 flex items-center justify-center px-2 sm:px-0"
                       >
-                        {t('delete')}
+                        {deletingId === item.id ? t('deleting') : t('delete')}
                       </button>
                     </div>
                   </td>

@@ -195,9 +195,9 @@ async def delete_company(
     company_id: int,
     db: Session = Depends(get_db),
     session_company_id: int = Depends(get_active_company_id),
-    _current_admin: User = Depends(require_system_admin),
+    _membership: UserCompany = Depends(require_company_roles(CompanyRole.OWNER)),
 ):
-    """Delete a company (cascades to financial items and calculations). Only own company."""
+    """Delete a company (cascades to financial items and calculations). Allowed for ADMIN or OWNER."""
     if company_id != session_company_id:
         raise HTTPException(status_code=403, detail="Access denied to this company")
     company = ensure_company_exists(db, company_id)

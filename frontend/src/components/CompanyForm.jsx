@@ -9,7 +9,7 @@ import PasswordInput from './PasswordInput';
 import LocalizedDateInput from './LocalizedDateInput';
 import { useTranslation } from 'react-i18next';
 
-export default function CompanyForm({ company = null, onSubmit, onCancel }) {
+export default function CompanyForm({ company = null, onSubmit, onCancel, submitting = false }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: company?.name || '',
@@ -37,7 +37,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isFormValid || fiscalYearError) return;
+    if (!isFormValid || fiscalYearError || submitting) return;
     const toSubmit = { ...formData };
     if (!(toSubmit.password || '').trim()) delete toSubmit.password;
     else toSubmit.password = toSubmit.password.trim();
@@ -63,6 +63,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            disabled={submitting}
             className="input-field"
             placeholder={t('company_name_placeholder')}
           />
@@ -76,6 +77,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             required
             value={formData.legal_type}
             onChange={(e) => setFormData({ ...formData, legal_type: e.target.value })}
+            disabled={submitting}
             className="input-field"
           >
             <option value="LLC">{t('legal_type_llc_option')}</option>
@@ -122,6 +124,7 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             step="0.01"
             value={formData.zakat_nisab_value}
             onChange={(e) => setFormData({ ...formData, zakat_nisab_value: e.target.value })}
+            disabled={submitting}
             className="input-field"
             placeholder={t('nisab_placeholder')}
           />
@@ -136,19 +139,20 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             placeholder={company ? t('password_placeholder_edit') : t('password_placeholder_new')}
+            disabled={submitting}
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
-          <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
+          <button type="button" onClick={onCancel} disabled={submitting} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
             {t('cancel')}
           </button>
           <button
             type="submit"
             className="btn-primary w-full sm:w-auto order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!isFormValid}
+            disabled={!isFormValid || submitting}
           >
-            {company ? t('save_edits') : t('add')}
+            {submitting ? t('saving') : company ? t('save_edits') : t('add')}
           </button>
         </div>
       </div>

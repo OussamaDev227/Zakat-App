@@ -13,7 +13,7 @@ import LocalizedDateInput from './LocalizedDateInput';
 import { useRules } from '../contexts/RulesContext';
 import { getAssetTypes } from '../api/lookups';
 
-export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
+export default function FinancialItemForm({ item = null, onSubmit, onCancel, submitting = false }) {
   const { t } = useTranslation();
   const { rules } = useRules();
   const [assetTypes, setAssetTypes] = useState([]);
@@ -116,7 +116,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
       alert(t('validation_equity_type_required'));
       return;
     }
-    if (amountError || !isFormValid) return;
+    if (amountError || !isFormValid || submitting) return;
 
     const submitData = {
       name: formData.name,
@@ -160,6 +160,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            disabled={submitting}
             className="input-field"
             placeholder={t('item_name_placeholder')}
           />
@@ -173,6 +174,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             required
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            disabled={submitting}
             className="input-field"
             dir="rtl"
           >
@@ -196,6 +198,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
                     required
                     value={formData.asset_type || ''}
                     onChange={(e) => setFormData({ ...formData, asset_type: e.target.value })}
+                    disabled={submitting}
                     className="input-field"
                     dir="rtl"
                   >
@@ -225,6 +228,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
                 type="text"
                 value={formData.accounting_label || ''}
                 onChange={(e) => setFormData({ ...formData, accounting_label: e.target.value })}
+                disabled={submitting}
                 className="input-field"
                 placeholder=""
                 dir="rtl"
@@ -243,6 +247,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
               required
               value={formData.liability_code || ''}
               onChange={(e) => setFormData({ ...formData, liability_code: e.target.value })}
+              disabled={submitting}
               className="input-field"
               dir="rtl"
             >
@@ -276,6 +281,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
               required
               value={formData.equity_code || ''}
               onChange={(e) => setFormData({ ...formData, equity_code: e.target.value })}
+              disabled={submitting}
               className="input-field"
               dir="rtl"
             >
@@ -327,6 +333,7 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             step="0.01"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            disabled={submitting}
             className={`input-field ${amountError ? 'border-red-500' : ''}`}
             placeholder="0.00"
             aria-invalid={!!amountError}
@@ -340,15 +347,15 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
-          <button type="button" onClick={onCancel} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
+          <button type="button" onClick={onCancel} disabled={submitting} className="btn-secondary w-full sm:w-auto order-2 sm:order-1">
             {t('cancel')}
           </button>
           <button
             type="submit"
             className="btn-primary w-full sm:w-auto order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!isFormValid}
+            disabled={!isFormValid || submitting}
           >
-            {item ? t('save_edits') : t('add')}
+            {submitting ? t('saving') : item ? t('save_edits') : t('add')}
           </button>
         </div>
       </div>

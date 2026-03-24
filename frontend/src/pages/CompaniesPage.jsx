@@ -38,6 +38,9 @@ export default function CompaniesPage() {
   const [passwordModal, setPasswordModal] = useState(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [switchLoading, setSwitchLoading] = useState(false);
 
   useEffect(() => {
     if (hasCompanySession) {
@@ -101,13 +104,15 @@ export default function CompaniesPage() {
   }
 
   function handleSwitchCompany() {
+    setSwitchLoading(true);
     clearCompanySession();
     setCurrentCompanyDetail(null);
-    loadMinimal();
+    Promise.resolve(loadMinimal()).finally(() => setSwitchLoading(false));
   }
 
   async function handleSubmit(formData) {
     try {
+      setFormSubmitting(true);
       if (editingCompany) {
         await updateCompany(editingCompany.id, formData);
       } else {
@@ -122,6 +127,8 @@ export default function CompaniesPage() {
       }
     } catch (error) {
       alert(t('save_failed') + ': ' + error.message);
+    } finally {
+      setFormSubmitting(false);
     }
   }
 
@@ -132,6 +139,7 @@ export default function CompaniesPage() {
       return;
     }
     try {
+      setDeleteLoadingId(id);
       await deleteCompany(id);
       if (activeCompany && activeCompany.id === id) {
         clearCompanySession();
@@ -143,6 +151,8 @@ export default function CompaniesPage() {
       }
     } catch (error) {
       alert(t('delete_failed') + ': ' + error.message);
+    } finally {
+      setDeleteLoadingId(null);
     }
   }
 
@@ -164,9 +174,10 @@ export default function CompaniesPage() {
             <button
               type="button"
               onClick={handleSwitchCompany}
+              disabled={switchLoading}
               className="px-4 py-2 border-2 border-blue-600 text-blue-700 rounded-lg font-bold hover:bg-blue-50"
             >
-              {t('switch_company')}
+              {switchLoading ? t('switching_company') : t('switch_company')}
             </button>
           )}
           {canManageCompanies && (
@@ -176,6 +187,7 @@ export default function CompaniesPage() {
                 setEditingCompany(null);
                 setShowForm(true);
               }}
+              disabled={formSubmitting}
               className="btn-primary text-base sm:text-lg w-full sm:w-auto"
             >
               + {t('add_company_new')}
@@ -189,6 +201,7 @@ export default function CompaniesPage() {
           <CompanyForm
             company={editingCompany}
             onSubmit={handleSubmit}
+            submitting={formSubmitting}
             onCancel={() => {
               setShowForm(false);
               setEditingCompany(null);
@@ -244,6 +257,7 @@ export default function CompaniesPage() {
                               setEditingCompany(currentCompanyDetail);
                               setShowForm(true);
                             }}
+                            disabled={formSubmitting || deleteLoadingId === currentCompanyDetail.id}
                             className="text-blue-700 hover:text-blue-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
                           >
                             {t('edit')}
@@ -251,9 +265,10 @@ export default function CompaniesPage() {
                           <button
                             type="button"
                             onClick={() => handleDelete(currentCompanyDetail.id)}
+                            disabled={deleteLoadingId === currentCompanyDetail.id}
                             className="text-red-700 hover:text-red-900 text-xs sm:text-sm font-bold hover:underline whitespace-nowrap"
                           >
-                            {t('delete')}
+                            {deleteLoadingId === currentCompanyDetail.id ? t('deleting') : t('delete')}
                           </button>
                         </div>
                       )}
@@ -288,9 +303,10 @@ export default function CompaniesPage() {
                       <button
                         type="button"
                         onClick={() => openPasswordModal(company)}
+                        disabled={passwordLoading}
                         className="btn-primary text-sm py-2 px-4"
                       >
-                        {t('enter')}
+                        {passwordLoading && passwordModal?.id === company.id ? t('verifying') : t('enter')}
                       </button>
                     </li>
                   ))}

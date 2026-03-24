@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createUser, getUsers, assignUserToCompany, removeUserFromCompany, updateUserStatus } from '../api/users';
 import { getCompaniesMinimal } from '../api/companies';
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
   const [statusLoadingUserId, setStatusLoadingUserId] = useState(null);
+  const [removeLoadingKey, setRemoveLoadingKey] = useState(null);
   const [error, setError] = useState('');
 
   const [createForm, setCreateForm] = useState({
@@ -32,7 +37,7 @@ export default function AdminUsersPage() {
       setUsers(usersData);
       setCompanies(companiesData);
     } catch (err) {
-      setError(err.message || 'Failed to load admin data.');
+      setError(err.message || t('admin_error_load_data'));
     } finally {
       setLoading(false);
     }
@@ -46,6 +51,7 @@ export default function AdminUsersPage() {
     e.preventDefault();
     setError('');
     try {
+      setCreateLoading(true);
       await createUser({
         ...createForm,
         name: createForm.name.trim(),
@@ -54,7 +60,9 @@ export default function AdminUsersPage() {
       setCreateForm({ name: '', email: '', password: '', system_role: 'USER' });
       await loadData();
     } catch (err) {
-      setError(err.message || 'Failed to create user.');
+      setError(err.message || t('admin_error_create_user'));
+    } finally {
+      setCreateLoading(false);
     }
   }
 
@@ -62,26 +70,34 @@ export default function AdminUsersPage() {
     e.preventDefault();
     setError('');
     if (!assignForm.user_id || !assignForm.company_id) {
-      setError('Please choose user and company.');
+      setError(t('admin_error_select_user_company'));
       return;
     }
     try {
+      setAssignLoading(true);
       await assignUserToCompany(Number(assignForm.company_id), {
         user_id: Number(assignForm.user_id),
         role: assignForm.role,
       });
       await loadData();
     } catch (err) {
-      setError(err.message || 'Failed to assign user to company.');
+      setError(err.message || t('admin_error_assign_user'));
+    } finally {
+      setAssignLoading(false);
     }
   }
 
   async function handleRemoveMembership(companyId, userId) {
     try {
+      setError('');
+      const key = `${companyId}-${userId}`;
+      setRemoveLoadingKey(key);
       await removeUserFromCompany(companyId, userId);
       await loadData();
     } catch (err) {
-      setError(err.message || 'Failed to remove company membership.');
+      setError(err.message || t('admin_error_remove_membership'));
+    } finally {
+      setRemoveLoadingKey(null);
     }
   }
 
@@ -92,7 +108,7 @@ export default function AdminUsersPage() {
       await updateUserStatus(user.id, !user.is_active);
       await loadData();
     } catch (err) {
-      setError(err.message || 'Failed to update user status.');
+      setError(err.message || t('admin_error_update_status'));
     } finally {
       setStatusLoadingUserId(null);
     }
@@ -101,9 +117,9 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Panel - User Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('admin_title')}</h1>
         <p className="text-sm sm:text-base text-gray-600 mt-1">
-          Create users, assign users to companies, and manage memberships.
+          {t('admin_subtitle')}
         </p>
       </div>
 
@@ -115,53 +131,60 @@ export default function AdminUsersPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="card border-2 border-blue-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Create User</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin_create_user')}</h2>
           <form className="space-y-3" onSubmit={handleCreateUser}>
             <input
               className="input-field"
-              placeholder="Full name"
+              placeholder={t('admin_full_name')}
               value={createForm.name}
               onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))}
+              disabled={createLoading}
               required
             />
             <input
               className="input-field"
               type="email"
-              placeholder="Email"
+              placeholder={t('admin_email')}
               value={createForm.email}
               onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))}
+              disabled={createLoading}
               required
             />
             <input
               className="input-field"
               type="password"
-              placeholder="Password"
+              placeholder={t('admin_password')}
               value={createForm.password}
               onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))}
+              disabled={createLoading}
               required
             />
             <select
               className="input-field"
               value={createForm.system_role}
               onChange={(e) => setCreateForm((p) => ({ ...p, system_role: e.target.value }))}
+              disabled={createLoading}
             >
               <option value="USER">USER</option>
               <option value="ADMIN">ADMIN</option>
             </select>
-            <button type="submit" className="btn-primary w-full">Create User</button>
+            <button type="submit" className="btn-primary w-full" disabled={createLoading}>
+              {createLoading ? t('admin_creating') : t('admin_create_user_btn')}
+            </button>
           </form>
         </section>
 
         <section className="card border-2 border-blue-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Assign User To Company</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin_assign_user_company')}</h2>
           <form className="space-y-3" onSubmit={handleAssign}>
             <select
               className="input-field"
               value={assignForm.user_id}
               onChange={(e) => setAssignForm((p) => ({ ...p, user_id: e.target.value }))}
+              disabled={assignLoading}
               required
             >
-              <option value="">Select user</option>
+              <option value="">{t('admin_select_user')}</option>
               {userOptions.map((u) => (
                 <option key={u.value} value={u.value}>{u.label}</option>
               ))}
@@ -170,9 +193,10 @@ export default function AdminUsersPage() {
               className="input-field"
               value={assignForm.company_id}
               onChange={(e) => setAssignForm((p) => ({ ...p, company_id: e.target.value }))}
+              disabled={assignLoading}
               required
             >
-              <option value="">Select company</option>
+              <option value="">{t('admin_select_company')}</option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -181,21 +205,24 @@ export default function AdminUsersPage() {
               className="input-field"
               value={assignForm.role}
               onChange={(e) => setAssignForm((p) => ({ ...p, role: e.target.value }))}
+              disabled={assignLoading}
             >
               <option value="ACCOUNTANT">ACCOUNTANT</option>
               <option value="OWNER">OWNER</option>
               <option value="SHARIA_AUDITOR">SHARIA_AUDITOR</option>
             </select>
-            <button type="submit" className="btn-primary w-full">Assign</button>
+            <button type="submit" className="btn-primary w-full" disabled={assignLoading}>
+              {assignLoading ? t('admin_assigning') : t('admin_assign_btn')}
+            </button>
           </form>
         </section>
       </div>
 
       <section className="card border-2 border-blue-100">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-gray-900">Users</h2>
+          <h2 className="text-lg font-bold text-gray-900">{t('admin_users')}</h2>
           <button className="btn-secondary" onClick={loadData} disabled={loading}>
-            {loading ? 'Loading...' : 'Refresh'}
+            {loading ? t('loading') : t('admin_refresh')}
           </button>
         </div>
         <div className="table-container">
@@ -206,9 +233,9 @@ export default function AdminUsersPage() {
                 <th>Name</th>
                 <th>Email</th>
                 <th>System Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-                <th>Company Memberships</th>
+                <th>{t('admin_status')}</th>
+                <th>{t('actions')}</th>
+                <th>{t('admin_company_memberships')}</th>
               </tr>
             </thead>
             <tbody>
@@ -220,7 +247,7 @@ export default function AdminUsersPage() {
                   <td><span className="badge">{u.system_role}</span></td>
                   <td>
                     <span className={`badge ${u.is_active ? 'badge-success' : 'badge-danger'}`}>
-                      {u.is_active ? 'Active' : 'Inactive'}
+                      {u.is_active ? t('admin_status_active') : t('admin_status_inactive')}
                     </span>
                   </td>
                   <td>
@@ -232,26 +259,29 @@ export default function AdminUsersPage() {
                       onClick={() => handleToggleUserStatus(u)}
                     >
                       {statusLoadingUserId === u.id
-                        ? 'Updating...'
+                        ? t('admin_updating')
                         : u.is_active
-                        ? 'Deactivate'
-                        : 'Activate'}
+                        ? t('admin_deactivate')
+                        : t('admin_activate')}
                     </button>
                   </td>
                   <td>
                     {!u.memberships?.length ? (
-                      <span className="text-gray-500 text-sm">No memberships</span>
+                      <span className="text-gray-500 text-sm">{t('admin_no_memberships')}</span>
                     ) : (
                       <div className="space-y-2">
                         {u.memberships.map((m) => (
                           <div key={`${u.id}-${m.company_id}`} className="flex items-center gap-2 text-sm">
-                            <span>Company #{m.company_id}</span>
+                            <span>{t('admin_company_label', { id: m.company_id })}</span>
                             <span className="badge">{m.role}</span>
                             <button
                               className="text-red-700 hover:text-red-900 font-semibold"
+                              disabled={removeLoadingKey === `${m.company_id}-${u.id}`}
                               onClick={() => handleRemoveMembership(m.company_id, u.id)}
                             >
-                              Remove
+                              {removeLoadingKey === `${m.company_id}-${u.id}`
+                                ? t('admin_removing')
+                                : t('admin_remove')}
                             </button>
                           </div>
                         ))}

@@ -50,7 +50,7 @@ export default function Layout({ children }) {
 
   const navItems = [
     { path: '/companies', labelKey: 'nav_companies', visible: true },
-    { path: '/admin/users', labelKey: 'Admin', visible: systemRole === 'ADMIN' },
+    { path: '/admin/users', labelKey: 'nav_admin', visible: systemRole === 'ADMIN' },
     { path: '/financial-items', labelKey: 'nav_financial_items', visible: hasPermission('viewReports') },
     { path: '/zakat', labelKey: 'nav_zakat', visible: hasPermission('viewReports') },
     { path: '/history', labelKey: 'nav_history', visible: hasPermission('viewReports') },
