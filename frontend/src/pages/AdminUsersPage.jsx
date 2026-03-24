@@ -128,7 +128,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full lg:w-[min(96vw,1800px)] lg:relative lg:left-1/2 lg:-translate-x-1/2">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('admin_title')}</h1>
         <p className="text-sm sm:text-base text-gray-600 mt-1">
@@ -142,8 +142,8 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <section className="card border-2 border-blue-100 lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
+        <section className="card border-2 border-blue-100 lg:col-span-2">
           <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin_create_user')}</h2>
           <form className="space-y-3" onSubmit={handleCreateUser}>
             <input
@@ -230,7 +230,7 @@ export default function AdminUsersPage() {
           </form>
         </section>
 
-        <section className="card border-2 border-blue-100 lg:col-span-6">
+        <section className="card border-2 border-blue-100 lg:col-span-7">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">{t('admin_users')}</h2>
             <button className="btn-secondary" onClick={loadData} disabled={loading}>
@@ -241,10 +241,10 @@ export default function AdminUsersPage() {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>System Role</th>
+                  <th>{t('admin_table_id')}</th>
+                  <th>{t('name')}</th>
+                  <th>{t('admin_email')}</th>
+                  <th>{t('admin_system_role')}</th>
                   <th>{t('admin_status')}</th>
                   <th>{t('actions')}</th>
                   <th>{t('admin_company_memberships')}</th>

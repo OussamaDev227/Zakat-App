@@ -26,6 +26,10 @@
   }
 }
 
+html.dark body {
+  @apply bg-gradient-to-br from-slate-900 to-slate-950 text-slate-100;
+}
+
 @layer components {
   .btn-primary {
     @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 
@@ -124,4 +128,56 @@
 [dir="ltr"] .nav-item-active {
   border-left-width: 4px;
   border-left-color: rgb(29 78 216);
+}
+
+/* Dark mode - common UI tokens */
+html.dark .card {
+  @apply bg-slate-900 border-slate-700 shadow-xl;
+}
+
+html.dark .input-field {
+  @apply bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-400;
+}
+
+html.dark .btn-secondary {
+  @apply bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-600 hover:border-slate-500;
+}
+
+html.dark .table-container {
+  @apply border-slate-700;
+}
+
+html.dark table {
+  @apply bg-slate-900;
+}
+
+html.dark th {
+  @apply bg-slate-800 text-slate-100 border-slate-700;
+}
+
+html.dark td {
+  @apply text-slate-200 border-slate-800;
+}
+
+html.dark tr:hover {
+  @apply bg-slate-800;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  @apply text-slate-100;
+}
+
+html.dark p,
+html.dark span,
+html.dark div {
+  @apply text-slate-200;
+}
+
+html.dark nav {
+  @apply bg-slate-900 border-slate-700;
 }

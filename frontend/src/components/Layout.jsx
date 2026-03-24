@@ -27,6 +27,7 @@ export default function Layout({ children }) {
   const primaryRef = getPrimaryReference();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
   const langDropdownRef = useRef(null);
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
@@ -47,6 +48,26 @@ export default function Layout({ children }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      return;
+    }
+    const preferredDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = preferredDark ? 'dark' : 'light';
+    setTheme(initialTheme);
+    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+    localStorage.setItem('theme', nextTheme);
+  }
 
   const navItems = [
     { path: '/dashboard', labelKey: 'nav_dashboard', visible: systemRole === 'ADMIN' || hasRole('OWNER') },
@@ -86,6 +107,15 @@ export default function Layout({ children }) {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none text-white text-xs sm:text-sm font-semibold"
+                aria-label={theme === 'dark' ? t('theme_light') : t('theme_dark')}
+                title={theme === 'dark' ? t('theme_light') : t('theme_dark')}
+              >
+                {theme === 'dark' ? `☀️ ${t('theme_light')}` : `🌙 ${t('theme_dark')}`}
+              </button>
               {/* Language switcher */}
               <div className="relative" ref={langDropdownRef}>
                 <button
