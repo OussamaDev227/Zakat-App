@@ -48,8 +48,6 @@ export default function Layout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const currentFlag = <FlagIcon langCode={currentLangCode} size={28} />;
-
   const navItems = [
     { path: '/companies', labelKey: 'nav_companies', visible: true },
     { path: '/financial-items', labelKey: 'nav_financial_items', visible: hasPermission('viewReports') },
