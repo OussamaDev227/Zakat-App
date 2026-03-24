@@ -32,6 +32,8 @@
   "active_company": "Entreprise active :",
   "active_company_short": "Entreprise :",
   "switch_company": "Changer d'entreprise",
+  "logout": "Déconnexion",
+  "header_user_role": "Rôle",
   "learn_more_methodology": "En savoir plus sur la référence scientifique",
   "login_title": "Connexion",
   "login_subtitle": "Veuillez entrer vos identifiants pour accéder à l'interface de calcul de la Zakat.",

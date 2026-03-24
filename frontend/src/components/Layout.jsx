@@ -23,7 +23,15 @@ export default function Layout({ children }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const { activeCompany, setActiveCompany } = useCompany();
-  const { hasPermission, logout, systemRole, role } = useAuth();
+  const { user, hasPermission, logout, systemRole, role } = useAuth();
+
+  function headerRoleLabel() {
+    if (systemRole === 'ADMIN') return t('role_system_admin');
+    if (role === 'OWNER') return t('role_company_owner');
+    if (role === 'ACCOUNTANT') return t('role_company_accountant');
+    if (role === 'SHARIA_AUDITOR') return t('role_company_sharia_auditor');
+    return t('role_system_user');
+  }
   const primaryRef = getPrimaryReference();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -40,6 +48,7 @@ export default function Layout({ children }) {
   const currentFlag = <FlagIcon langCode={currentLangCode} size={24} />;
   const currentLangLabelKey =
     LANG_OPTIONS.find((opt) => opt.code === currentLangCode)?.labelKey || 'lang_en_name';
+  const headerRoleText = headerRoleLabel();
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -157,6 +166,21 @@ export default function Layout({ children }) {
                   </div>
                 )}
               </div>
+
+              {user && (
+                <div className="bg-white/15 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-xl border border-white/25 shadow-md max-w-[min(100%,14rem)] sm:max-w-xs">
+                  <p className="text-xs sm:text-sm text-white font-bold truncate" title={user.name}>
+                    {user.name}
+                  </p>
+                  <p className="text-[0.65rem] sm:text-xs text-blue-100 truncate mt-0.5" title={user.email}>
+                    {user.email}
+                  </p>
+                  <p className="text-[0.65rem] sm:text-xs text-yellow-200 font-semibold mt-1 truncate" title={headerRoleText}>
+                    <span className="text-white/80 font-normal">{t('header_user_role')}: </span>
+                    {headerRoleText}
+                  </p>
+                </div>
+              )}
 
               {activeCompany && (
                 <>

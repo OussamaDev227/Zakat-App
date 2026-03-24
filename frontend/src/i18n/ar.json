@@ -32,6 +32,8 @@
   "active_company": "الشركة النشطة:",
   "active_company_short": "الشركة:",
   "switch_company": "تبديل الشركة",
+  "logout": "تسجيل الخروج",
+  "header_user_role": "الدور",
   "learn_more_methodology": "معرفة المزيد عن المرجعية العلمية",
   "login_title": "تسجيل الدخول",
   "login_subtitle": "يرجى إدخال بيانات الاعتماد للوصول إلى واجهة حساب زكاة الشركات.",

@@ -142,9 +142,10 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        <section className="card border-2 border-blue-100 dark:border-blue-900 xl:col-span-3">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin_create_user')}</h2>
+      {/* Row 1: Forms side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <section className="card border-2 border-blue-100 dark:border-blue-900">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-4">{t('admin_create_user')}</h2>
           <form className="space-y-3" onSubmit={handleCreateUser}>
             <input
               className="input-field"
@@ -187,8 +188,8 @@ export default function AdminUsersPage() {
           </form>
         </section>
 
-        <section className="card border-2 border-blue-100 dark:border-blue-900 xl:col-span-3">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin_assign_user_company')}</h2>
+        <section className="card border-2 border-blue-100 dark:border-blue-900">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-4">{t('admin_assign_user_company')}</h2>
           <form className="space-y-3" onSubmit={handleAssign}>
             <select
               className="input-field"
@@ -229,84 +230,85 @@ export default function AdminUsersPage() {
             </button>
           </form>
         </section>
-
-        <section className="card border-2 border-blue-100 dark:border-blue-900 xl:col-span-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-gray-900">{t('admin_users')}</h2>
-            <button className="btn-secondary" onClick={loadData} disabled={loading}>
-              {loading ? t('loading') : t('admin_refresh')}
-            </button>
-          </div>
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t('admin_table_id')}</th>
-                  <th>{t('name')}</th>
-                  <th>{t('admin_email')}</th>
-                  <th>{t('admin_system_role')}</th>
-                  <th>{t('admin_status')}</th>
-                  <th>{t('actions')}</th>
-                  <th>{t('admin_company_memberships')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td>{u.id}</td>
-                    <td>{u.name}</td>
-                    <td>{u.email}</td>
-                    <td><span className="badge">{formatSystemRole(u.system_role)}</span></td>
-                    <td>
-                      <span className={`badge ${u.is_active ? 'badge-success' : 'badge-danger'}`}>
-                        {u.is_active ? t('admin_status_active') : t('admin_status_inactive')}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className={`text-xs sm:text-sm font-bold hover:underline ${
-                          u.is_active ? 'text-red-700 hover:text-red-900' : 'text-green-700 hover:text-green-900'
-                        }`}
-                        disabled={statusLoadingUserId === u.id}
-                        onClick={() => handleToggleUserStatus(u)}
-                      >
-                        {statusLoadingUserId === u.id
-                          ? t('admin_updating')
-                          : u.is_active
-                          ? t('admin_deactivate')
-                          : t('admin_activate')}
-                      </button>
-                    </td>
-                    <td>
-                      {!u.memberships?.length ? (
-                        <span className="text-gray-500 text-sm">{t('admin_no_memberships')}</span>
-                      ) : (
-                        <div className="space-y-2">
-                          {u.memberships.map((m) => (
-                            <div key={`${u.id}-${m.company_id}`} className="flex items-center gap-2 text-sm">
-                              <span>{t('admin_company_label', { id: m.company_id })}</span>
-                              <span className="badge">{formatCompanyRole(m.role)}</span>
-                              <button
-                                className="text-red-700 hover:text-red-900 font-semibold"
-                                disabled={removeLoadingKey === `${m.company_id}-${u.id}`}
-                                onClick={() => handleRemoveMembership(m.company_id, u.id)}
-                              >
-                                {removeLoadingKey === `${m.company_id}-${u.id}`
-                                  ? t('admin_removing')
-                                  : t('admin_remove')}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
+
+      {/* Row 2: Users table – full width */}
+      <section className="card border-2 border-blue-100 dark:border-blue-900">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">{t('admin_users')}</h2>
+          <button className="btn-secondary" onClick={loadData} disabled={loading}>
+            {loading ? t('loading') : t('admin_refresh')}
+          </button>
+        </div>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>{t('admin_table_id')}</th>
+                <th>{t('name')}</th>
+                <th>{t('admin_email')}</th>
+                <th>{t('admin_system_role')}</th>
+                <th>{t('admin_status')}</th>
+                <th>{t('actions')}</th>
+                <th>{t('admin_company_memberships')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td className="w-12 text-center">{u.id}</td>
+                  <td>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td><span className="badge">{formatSystemRole(u.system_role)}</span></td>
+                  <td>
+                    <span className={`badge ${u.is_active ? 'badge-success' : 'badge-danger'}`}>
+                      {u.is_active ? t('admin_status_active') : t('admin_status_inactive')}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className={`text-xs sm:text-sm font-bold hover:underline whitespace-nowrap ${
+                        u.is_active ? 'text-red-700 hover:text-red-900' : 'text-green-700 hover:text-green-900'
+                      }`}
+                      disabled={statusLoadingUserId === u.id}
+                      onClick={() => handleToggleUserStatus(u)}
+                    >
+                      {statusLoadingUserId === u.id
+                        ? t('admin_updating')
+                        : u.is_active
+                        ? t('admin_deactivate')
+                        : t('admin_activate')}
+                    </button>
+                  </td>
+                  <td>
+                    {!u.memberships?.length ? (
+                      <span className="text-gray-500 dark:text-slate-400 text-sm">{t('admin_no_memberships')}</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {u.memberships.map((m) => (
+                          <div key={`${u.id}-${m.company_id}`} className="flex items-center gap-1.5 text-sm bg-gray-50 dark:bg-slate-700 rounded-lg px-2 py-1">
+                            <span className="text-gray-600 dark:text-slate-300 text-xs">{t('admin_company_label', { id: m.company_id })}</span>
+                            <span className="badge text-xs px-2 py-0.5">{formatCompanyRole(m.role)}</span>
+                            <button
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-semibold text-xs"
+                              disabled={removeLoadingKey === `${m.company_id}-${u.id}`}
+                              onClick={() => handleRemoveMembership(m.company_id, u.id)}
+                            >
+                              {removeLoadingKey === `${m.company_id}-${u.id}`
+                                ? t('admin_removing')
+                                : t('admin_remove')}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
