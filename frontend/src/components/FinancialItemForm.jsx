@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import LocalizedDateInput from './LocalizedDateInput';
 import { useRules } from '../contexts/RulesContext';
 import { getAssetTypes } from '../api/lookups';
 
@@ -254,7 +255,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             </select>
             {formData.liability_code && (
               <p className="text-xs text-gray-700 mt-1 font-medium">
-                {liabilityOptions.find(l => l.code === formData.liability_code)?.reason_ar}
+                {(() => {
+                  const selected = liabilityOptions.find((l) => l.code === formData.liability_code);
+                  if (!selected) return '';
+                  const key = `rule_${selected.code}_reason`;
+                  const translated = t(key);
+                  return translated && translated !== key ? translated : selected.reason_ar;
+                })()}
               </p>
             )}
           </div>
@@ -281,7 +288,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
             </select>
             {formData.equity_code && (
               <p className="text-xs text-gray-700 mt-1 font-medium" dir="rtl">
-                {equityOptions.find(e => e.code === formData.equity_code)?.reason_ar}
+                {(() => {
+                  const selected = equityOptions.find((e) => e.code === formData.equity_code);
+                  if (!selected) return '';
+                  const key = `rule_${selected.code}_reason`;
+                  const translated = t(key);
+                  return translated && translated !== key ? translated : selected.reason_ar;
+                })()}
               </p>
             )}
             <p className="text-xs text-gray-500 mt-1" dir="rtl">
@@ -294,20 +307,13 @@ export default function FinancialItemForm({ item = null, onSubmit, onCancel }) {
           <label className="block text-sm font-bold text-gray-900 mb-2">
             {t('acquisition_date_label')} *
           </label>
-          <input
-            type="date"
+          <LocalizedDateInput
+            id="acquisition_date"
             required
             value={formData.acquisition_date}
-            onChange={(e) => setFormData({ ...formData, acquisition_date: e.target.value })}
-            className={`input-field ${acquisitionDateError ? 'border-red-500' : ''}`}
-            aria-invalid={!!acquisitionDateError}
-            aria-describedby={acquisitionDateError ? 'acquisition-date-error' : undefined}
+            onChange={(val) => setFormData({ ...formData, acquisition_date: val })}
+            error={acquisitionDateError}
           />
-          {acquisitionDateError && (
-            <p id="acquisition-date-error" className="text-red-600 text-sm font-medium mt-1" role="alert">
-              {acquisitionDateError}
-            </p>
-          )}
         </div>
 
         <div>

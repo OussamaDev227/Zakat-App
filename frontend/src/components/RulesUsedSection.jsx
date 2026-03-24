@@ -49,11 +49,31 @@ export default function RulesUsedSection({ rules }) {
                 {groupedRules.ASSET.map((rule, idx) => (
                   <div key={idx} className="bg-white rounded-lg p-3 border border-blue-200">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="font-bold text-blue-700 text-sm">{getRuleCodeArabic(rule.rule_code)}</span>
+                    <span className="font-bold text-blue-700 text-sm">
+                      {(() => {
+                        const codeKey = `rule_${rule.rule_code}`;
+                        const translated = t(codeKey);
+                        return translated && translated !== codeKey
+                          ? translated
+                          : getRuleCodeArabic(rule.rule_code);
+                      })()}
+                    </span>
                       <span className="badge badge-info text-xs">{t('category_asset')}</span>
                     </div>
-                    <p className="font-semibold text-gray-900 mb-1">{rule.label_ar}</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{rule.reason_ar}</p>
+                    <p className="font-semibold text-gray-900 mb-1">
+                      {(() => {
+                        const titleKey = `rule_${rule.rule_code}`;
+                        const title = t(titleKey);
+                        return title && title !== titleKey ? title : rule.label_ar;
+                      })()}
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {(() => {
+                        const reasonKey = `rule_${rule.rule_code}_reason`;
+                        const reason = t(reasonKey);
+                        return reason && reason !== reasonKey ? reason : rule.reason_ar;
+                      })()}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -67,11 +87,31 @@ export default function RulesUsedSection({ rules }) {
                 {groupedRules.LIABILITY.map((rule, idx) => (
                   <div key={idx} className="bg-white rounded-lg p-3 border border-red-200">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="font-bold text-red-700 text-sm">{getRuleCodeArabic(rule.rule_code)}</span>
+                      <span className="font-bold text-red-700 text-sm">
+                        {(() => {
+                          const codeKey = `rule_${rule.rule_code}`;
+                          const translated = t(codeKey);
+                          return translated && translated !== codeKey
+                            ? translated
+                            : getRuleCodeArabic(rule.rule_code);
+                        })()}
+                      </span>
                       <span className="badge badge-danger text-xs">{t('category_liability')}</span>
                     </div>
-                    <p className="font-semibold text-gray-900 mb-1">{rule.label_ar}</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{rule.reason_ar}</p>
+                    <p className="font-semibold text-gray-900 mb-1">
+                      {(() => {
+                        const titleKey = `rule_${rule.rule_code}`;
+                        const title = t(titleKey);
+                        return title && title !== titleKey ? title : rule.label_ar;
+                      })()}
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {(() => {
+                        const reasonKey = `rule_${rule.rule_code}_reason`;
+                        const reason = t(reasonKey);
+                        return reason && reason !== reasonKey ? reason : rule.reason_ar;
+                      })()}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -85,11 +125,31 @@ export default function RulesUsedSection({ rules }) {
                 {groupedRules.EXTENDED.map((rule, idx) => (
                   <div key={idx} className="bg-white rounded-lg p-3 border border-purple-200">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="font-bold text-purple-700 text-sm">{getRuleCodeArabic(rule.rule_code)}</span>
+                      <span className="font-bold text-purple-700 text-sm">
+                        {(() => {
+                          const codeKey = `rule_${rule.rule_code}`;
+                          const translated = t(codeKey);
+                          return translated && translated !== codeKey
+                            ? translated
+                            : getRuleCodeArabic(rule.rule_code);
+                        })()}
+                      </span>
                       <span className="badge bg-purple-100 text-purple-800 text-xs">{t('extended')}</span>
                     </div>
-                    <p className="font-semibold text-gray-900 mb-1">{rule.label_ar}</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{rule.reason_ar}</p>
+                    <p className="font-semibold text-gray-900 mb-1">
+                      {(() => {
+                        const titleKey = `rule_${rule.rule_code}`;
+                        const title = t(titleKey);
+                        return title && title !== titleKey ? title : rule.label_ar;
+                      })()}
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {(() => {
+                        const reasonKey = `rule_${rule.rule_code}_reason`;
+                        const reason = t(reasonKey);
+                        return reason && reason !== reasonKey ? reason : rule.reason_ar;
+                      })()}
+                    </p>
                   </div>
                 ))}
               </div>

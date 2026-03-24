@@ -672,11 +672,15 @@ export default function ZakatPage() {
                     {calculation.rules_used.map((rule, index) => {
                       const codeKey = `rule_${rule.rule_code}`;
                       const codeLabel = t(codeKey) !== codeKey ? t(codeKey) : (rule.label_ar || rule.rule_code);
+                      const titleKey = `rule_${rule.rule_code}`;
+                      const title = t(titleKey) !== titleKey ? t(titleKey) : rule.label_ar;
+                      const reasonKey = `rule_${rule.rule_code}_reason`;
+                      const reason = t(reasonKey) !== reasonKey ? t(reasonKey) : rule.reason_ar;
                       return (
                         <tr key={rule.rule_code || index}>
                           <td className="font-semibold text-purple-700">{codeLabel}</td>
-                          <td className="font-bold text-gray-900">{rule.label_ar}</td>
-                          <td className="text-sm font-medium text-gray-800">{rule.reason_ar}</td>
+                          <td className="font-bold text-gray-900">{title}</td>
+                          <td className="text-sm font-medium text-gray-800">{reason}</td>
                         </tr>
                       );
                     })}

@@ -6,6 +6,7 @@
 
 import { useState, useMemo } from 'react';
 import PasswordInput from './PasswordInput';
+import LocalizedDateInput from './LocalizedDateInput';
 import { useTranslation } from 'react-i18next';
 
 export default function CompanyForm({ company = null, onSubmit, onCancel }) {
@@ -87,14 +88,12 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             <label className="block text-sm font-bold text-gray-900 mb-2">
               {t('financial_year_start')} *
             </label>
-            <input
-              type="date"
+            <LocalizedDateInput
+              id="fiscal_year_start"
               required
               value={formData.fiscal_year_start}
-              onChange={(e) => setFormData({ ...formData, fiscal_year_start: e.target.value })}
-              className={`input-field ${fiscalYearError ? 'border-red-500' : ''}`}
-              aria-invalid={!!fiscalYearError}
-              aria-describedby={fiscalYearError ? 'fiscal-year-error' : undefined}
+              onChange={(val) => setFormData({ ...formData, fiscal_year_start: val })}
+              error={fiscalYearError}
             />
           </div>
 
@@ -102,22 +101,16 @@ export default function CompanyForm({ company = null, onSubmit, onCancel }) {
             <label className="block text-sm font-bold text-gray-900 mb-2">
               {t('financial_year_end')} *
             </label>
-            <input
-              type="date"
+            <LocalizedDateInput
+              id="fiscal_year_end"
               required
               value={formData.fiscal_year_end}
-              onChange={(e) => setFormData({ ...formData, fiscal_year_end: e.target.value })}
-              className={`input-field ${fiscalYearError ? 'border-red-500' : ''}`}
-              aria-invalid={!!fiscalYearError}
-              aria-describedby={fiscalYearError ? 'fiscal-year-error' : undefined}
+              onChange={(val) => setFormData({ ...formData, fiscal_year_end: val })}
+              error={fiscalYearError}
             />
           </div>
         </div>
-        {fiscalYearError && (
-          <p id="fiscal-year-error" className="text-red-600 text-sm font-medium" role="alert">
-            {fiscalYearError}
-          </p>
-        )}
+        {null}
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
