@@ -23,7 +23,7 @@ export default function Layout({ children }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const { activeCompany, setActiveCompany } = useCompany();
-  const { hasPermission, logout } = useAuth();
+  const { hasPermission, logout, systemRole } = useAuth();
   const primaryRef = getPrimaryReference();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -50,6 +50,7 @@ export default function Layout({ children }) {
 
   const navItems = [
     { path: '/companies', labelKey: 'nav_companies', visible: true },
+    { path: '/admin/users', labelKey: 'Admin', visible: systemRole === 'ADMIN' },
     { path: '/financial-items', labelKey: 'nav_financial_items', visible: hasPermission('viewReports') },
     { path: '/zakat', labelKey: 'nav_zakat', visible: hasPermission('viewReports') },
     { path: '/history', labelKey: 'nav_history', visible: hasPermission('viewReports') },

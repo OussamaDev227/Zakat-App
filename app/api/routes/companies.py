@@ -24,6 +24,8 @@ from app.core.security import (
     require_company_roles,
     require_system_admin,
 )
+from app.schemas.user import CompanyUserAssignRequest, CompanyUserMembershipResponse
+from app.services.user_management_service import UserManagementService
 
 router = APIRouter()
 
@@ -60,12 +62,13 @@ async def list_companies(
     current_user: User = Depends(get_current_user),
 ):
     """Return current company details for authenticated user active company."""
+    is_admin = getattr(current_user.system_role, "value", current_user.system_role) == "ADMIN"
     membership = (
         db.query(UserCompany)
         .filter(UserCompany.user_id == current_user.id, UserCompany.company_id == company_id)
         .first()
     )
-    if not membership:
+    if not membership and not is_admin:
         raise HTTPException(status_code=403, detail="No access to this company.")
     company = ensure_company_exists(db, company_id)
     return CompanyListResponse(items=[CompanyResponse.model_validate(company)])
@@ -200,4 +203,48 @@ async def delete_company(
     company = ensure_company_exists(db, company_id)
     db.delete(company)
     db.commit()
+    return None
+
+
+@router.post("/{company_id}/users", response_model=CompanyUserMembershipResponse, status_code=201)
+async def assign_user_to_company(
+    company_id: int,
+    body: CompanyUserAssignRequest,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_system_admin),
+):
+    """Assign a user to a company with a company-scoped role (ADMIN only)."""
+    ensure_company_exists(db, company_id)
+    user = db.query(User).filter(User.id == body.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    existing = (
+        db.query(UserCompany)
+        .filter(UserCompany.user_id == body.user_id, UserCompany.company_id == company_id)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="User is already assigned to this company.")
+
+    membership = UserCompany(user_id=body.user_id, company_id=company_id, role=body.role)
+    db.add(membership)
+    db.commit()
+    return CompanyUserMembershipResponse(
+        user_id=membership.user_id,
+        company_id=membership.company_id,
+        role=membership.role,
+    )
+
+
+@router.delete("/{company_id}/users/{user_id}", status_code=204)
+async def remove_user_from_company(
+    company_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_system_admin),
+):
+    """Remove a user's membership from a company (ADMIN only)."""
+    service = UserManagementService(db)
+    service.remove_company_membership(company_id=company_id, user_id=user_id)
     return None

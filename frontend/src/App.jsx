@@ -18,8 +18,10 @@ import { CompanyProvider } from './contexts/CompanyContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import CompanyRouteGuard from './components/CompanyRouteGuard';
+import AdminRouteGuard from './components/AdminRouteGuard';
 import LoginPage from './pages/LoginPage';
 import CompaniesPage from './pages/CompaniesPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 import FinancialItemsPage from './pages/FinancialItemsPage';
 import ZakatPage from './pages/ZakatPage';
 import ZakatHistoryPage from './pages/ZakatHistoryPage';
@@ -62,6 +64,7 @@ function App() {
                       <Routes>
                         <Route path="/" element={<RootRedirect />} />
                         <Route path="/companies" element={<CompaniesPage />} />
+                        <Route path="/admin/users" element={<AdminRouteGuard><AdminUsersPage /></AdminRouteGuard>} />
                         <Route path="/financial-items" element={<CompanyRouteGuard><FinancialItemsPage /></CompanyRouteGuard>} />
                         <Route path="/zakat" element={<CompanyRouteGuard><ZakatPage /></CompanyRouteGuard>} />
                         <Route path="/history" element={<CompanyRouteGuard><ZakatHistoryPage /></CompanyRouteGuard>} />

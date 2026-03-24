@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production-use-env-secret"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 480  # 8 hours
+
+    # Runtime environment
+    env: str = "development"  # development | production
+
+    # Initial admin seed (used only when no ADMIN exists)
+    admin_email: Optional[str] = None
+    admin_password: Optional[str] = None
     
     # Default company password for existing companies (migration backfill only)
     default_company_password: str = "ChangeMe123"

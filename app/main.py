@@ -5,10 +5,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from sqlalchemy import func
 
 from app.core.config import settings
+from app.core.security import hash_password
+from app.db.session import SessionLocal
+from app.models.user import SystemRole, User
 from app.rules.engine import RuleEngine
-from app.api.routes import companies, financial_items, zakat, rules, lookups, excel_upload, auth
+from app.api.routes import companies, financial_items, zakat, rules, lookups, excel_upload, auth, users
 
 
 def _log_request(request: Request):
@@ -61,6 +65,39 @@ async def lifespan(app: FastAPI):
             f"Failed to load or validate zakat rules: {e}\n"
             "Please ensure zakat_rules_full_v1.json exists and contains all required Arabic fields (reason_ar)."
         ) from e
+
+    # Startup: ensure at least one system ADMIN exists.
+    db = SessionLocal()
+    try:
+        admin_count = (
+            db.query(func.count(User.id))
+            .filter(User.system_role == SystemRole.ADMIN)
+            .scalar()
+        )
+        if not admin_count:
+            seed_email = settings.admin_email
+            seed_password = settings.admin_password
+            is_production = (settings.env or "development").lower() == "production"
+
+            if not seed_email or not seed_password:
+                if is_production:
+                    raise RuntimeError(
+                        "No ADMIN user exists and ADMIN_EMAIL / ADMIN_PASSWORD are missing in production."
+                    )
+                seed_email = seed_email or "admin@zakat.com"
+                seed_password = seed_password or "admin123"
+
+            seeded_admin = User(
+                name="System Admin",
+                email=seed_email,
+                password_hash=hash_password(seed_password),
+                system_role=SystemRole.ADMIN,
+                is_active=True,
+            )
+            db.add(seeded_admin)
+            db.commit()
+    finally:
+        db.close()
     
     yield
     
@@ -88,6 +125,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(companies.router, prefix="/companies", tags=["companies"])
 app.include_router(financial_items.router, prefix="/financial-items", tags=["financial-items"])
 app.include_router(zakat.router, prefix="/zakat", tags=["zakat"])
