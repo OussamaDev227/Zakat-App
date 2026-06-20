@@ -109,17 +109,20 @@ export default function Layout({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-between items-center min-h-[5rem] py-3 gap-3">
             <div className="flex items-center flex-wrap gap-2 sm:gap-4 md:gap-8">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-md">
-                {t('app_title')}
-              </h1>
-              <p className="hidden sm:block text-xs sm:text-sm text-blue-100 font-semibold">{t('app_subtitle')}</p>
+              <img src="/assets/logo-192.png" alt="SmartZakat logo" className="h-10 rounded-md" />
+              <div>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-md">
+                  {t('app_title')}
+                </h1>
+                <p className="hidden sm:block text-xs sm:text-sm text-blue-100 font-semibold">{t('app_subtitle')}</p>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none text-white text-xs sm:text-sm font-semibold"
+                className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none tex[...]"
                 aria-label={theme === 'dark' ? t('theme_light') : t('theme_dark')}
                 title={theme === 'dark' ? t('theme_light') : t('theme_dark')}
               >
@@ -130,7 +133,7 @@ export default function Layout({ children }) {
                 <button
                   type="button"
                   onClick={() => setLangDropdownOpen((o) => !o)}
-                  className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-2 py-1.5 min-w-[2.75rem] h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none"
+                  className="flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-2 py-1.5 min-w-[2.75rem] h-9 hover:bg-white/20 focus:ring-2 focus:ring-white/50 focu[...]"
                   aria-label={t('language')}
                   title={t('language')}
                 >
@@ -155,7 +158,7 @@ export default function Layout({ children }) {
                         aria-selected={opt.code === currentLangCode}
                         aria-label={t(opt.labelKey)}
                         onClick={() => handleLanguageChange(opt.code)}
-                        className={`w-full px-3 py-2 flex items-center justify-start gap-2 hover:bg-gray-100 dark:hover:bg-slate-700 focus:bg-gray-100 dark:focus:bg-slate-700 focus:outline-none first:rounded-t-lg last:rounded-b-lg text-gray-800 dark:text-slate-200 ${
+                        className={`w-full px-3 py-2 flex items-center justify-start gap-2 hover:bg-gray-100 dark:hover:bg-slate-700 focus:bg-gray-100 dark:focus:bg-slate-700 focus:outline-none f[...]
                           opt.code === currentLangCode ? 'bg-blue-50 dark:bg-slate-700 font-semibold' : ''
                         }`}
                       >
@@ -245,7 +248,7 @@ export default function Layout({ children }) {
                   className={`px-3 lg:px-5 py-4 text-sm font-bold transition-all duration-200 ${
                     isActive
                       ? 'text-blue-700 dark:text-blue-400 border-b-4 border-blue-700 dark:border-blue-400 bg-blue-50 dark:bg-slate-800'
-                      : 'text-gray-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-b-4 hover:border-gray-300 dark:hover:border-slate-600'
+                      : 'text-gray-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-b-4 hover:border-gray-300 dark:hover:[...]
                   }`}
                 >
                   {t(item.labelKey)}
@@ -297,7 +300,7 @@ export default function Layout({ children }) {
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <span className="inline-flex items-center rounded-full border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-blue-700 dark:text-blue-400">
+              <span className="inline-flex items-center rounded-full border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-blue-700 dark:text[...]
                 {primaryRef.text.badgeLabelAr}
               </span>
               <Link
